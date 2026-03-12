@@ -1,2 +1,13 @@
-h1 {
+header {
+    display: flex;
+    justify-content: center;
+}
+
+td {
+  text-align: center;
+  vertical-align: top;
+}
+
+.expense-title {
+  text-align: center;
 }
