@@ -1,5 +1,6 @@
 import Fastify from 'fastify'
 import fastifypg from '@fastify/postgres'
+import expense from './expenses.ts'
 
 const fastify = Fastify({
   logger: true
@@ -13,10 +14,12 @@ fastify.register(fastifypg, {
   database: "expense tracker"
 });
 
-fastify.post
-
-fastify.get("/", (_, reply) => {
-  reply.send({value1 : "test"});
+fastify.get("/expenses", async (_, response) => {
+  const expenses = await expense.getAllExpenses();
+  const test = JSON.stringify(expenses);
+  response.status(200);
+  response.header("Access-Control-Allow-Origin", "*");
+  response.send({ response: test });
 })
 
 try {
