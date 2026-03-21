@@ -8,11 +8,29 @@ td {
   vertical-align: top;
 }
 
-.expense-title {
-  text-align: center;
+button {
+  margin-left: 6px;
+  margin-right: 6px;
 }
 
 table, th, td {
   border: 1px solid black;
   border-collapse: collapse;
+}
+
+.expense-title {
+  text-align: center;
+}
+
+.expense-table-header {
+  padding: 6px 10px;
+}
+
+.expense-table-data {
+  display: block;
+  padding: 6px 10px;
+}
+
+.expense-table-action-button {
+  padding: 4px;
 }
