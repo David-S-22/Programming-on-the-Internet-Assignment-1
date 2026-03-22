@@ -2,6 +2,13 @@ import Fastify from 'fastify'
 import fastifypg from '@fastify/postgres'
 import { getAllExpenses } from './expenses.ts'
 
+
+interface updateOrDeleteRequest extends Fastify.RequestGenericInterface {
+  Params: {
+    id: number
+  }
+}
+
 const fastify = Fastify({
   logger: true
 });
@@ -14,12 +21,20 @@ fastify.register(fastifypg, {
   database: "expense tracker"
 });
 
-fastify.get("/expenses", async (_, response) => {
+fastify.get("/expenses", async (_, res) => {
   const expenses = await getAllExpenses();
   const allExpenses = JSON.stringify(expenses);
-  response.header("Access-Control-Allow-Origin", "http:://localhost");
-  response.status(200);
-  response.send(allExpenses);
+  res.header("Access-Control-Allow-Origin", "*");
+  res.status(200);
+  res.send(allExpenses);
+});
+
+fastify.delete<updateOrDeleteRequest>("/expenses/:id", async (req, res) => {
+  const { id } = req.params;
+  console.log(id);
+
+  res.header("Access-Control-Allow-Origin", "*");
+  res.status(200);
 })
 
 try {
