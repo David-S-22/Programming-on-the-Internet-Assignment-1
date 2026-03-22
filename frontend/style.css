@@ -9,8 +9,7 @@ td {
 }
 
 button {
-  margin-left: 6px;
-  margin-right: 6px;
+  text-align: center;
 }
 
 table, th, td {
@@ -27,10 +26,16 @@ table, th, td {
 }
 
 .expense-table-data {
-  display: block;
   padding: 6px 10px;
 }
 
 .expense-table-action-button {
-  padding: 4px;
+  margin-left: 6px;
+  margin-right: 6px;
+  padding: 5px;
+}
+
+#expense-table-delete-action-button {
+  padding-left: 8px;
+  padding-right: 8px;
 }
