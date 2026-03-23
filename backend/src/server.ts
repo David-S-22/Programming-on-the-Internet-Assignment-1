@@ -1,13 +1,6 @@
 import Fastify from 'fastify'
-import fastifypg from '@fastify/postgres'
-import fastifyEnv from '@fastify/env';
-
-declare module 'fastify' {
-  interface FastifyInstance {
-    config: {
-    }
-  }
-}
+import fastifypg, { fastifyPostgres } from '@fastify/postgres'
+import dotenv from "dotenv";
 
 interface expense { 
   id: number;
@@ -19,53 +12,50 @@ interface expense {
   description: string;
 };
 
-interface deleteRequest extends Fastify.RequestGenericInterface {
+interface baseIdParamsRequestInterface extends Fastify.RequestGenericInterface {
   Params: {
     id: number
   }
 };
 
-interface updateRequest extends Fastify.RequestGenericInterface {
+interface updateRequestInterface extends baseIdParamsRequestInterface {
   Params: {
     id: number
   },
   Body: expense
 };
 
+dotenv.config({ path: "./.env", override: true });
+
 const fastify = Fastify({
   logger: true
 });
 
-
-fastify.register(fastifyEnv);
-
 fastify.register(fastifypg, {
-  host: "localhost",
-  port: 5432,
-  user: "david",
-  password: "test",
-  database: "expense tracker"
+  host: process.env.PGHOST,
+  port: Number(process.env.PGPORT),
+  user: process.env.PGUSER,
+  password: process.env.PGPASSWORD,
+  database: process.env.PGDATABASE
 });
 
 fastify.get("/expenses", async (_, res) => {
-  var expense1: expense = {id: 1, title: "Computer", category: "Personal", amount: 1, cost: 1300, date: new Date(2026, 3, 15), description: "A new computer for me :)"};
-  var expense2: expense ={id: 2, title: "Potatos", category: "Living", amount: 2, cost: 6, date: new Date(2026, 3, 15), description: "I like potatos!"};
-  const expenses: expense[] = [expense1, expense2];
-  const allExpenses = JSON.stringify(expenses);
+  const foundExpenses = (await fastify.pg.query<expense>("select * from expenses.expense")).rows;
+  const allExpenses = JSON.stringify(foundExpenses);
 
   res.header("Access-Control-Allow-Origin", "*");
   res.status(200);
   res.send(allExpenses);
 });
 
-fastify.delete<deleteRequest>("/expenses/:id", async (req, res) => {
+fastify.delete<baseIdParamsRequestInterface>("/expenses/:id", async (req, res) => {
   const { id } = req.params;
 
   res.header("Access-Control-Allow-Origin", "*");
   res.status(200);
 });
 
-fastify.put<updateRequest>("/expenses/update/:id", async (req, res) => {
+fastify.patch<updateRequestInterface>("/expenses/update/:id", async (req, res) => {
   const { title, category, amount, cost, date, description } = req.body;
 
   res.header("Access-Control-Allow-Origin", "*");
