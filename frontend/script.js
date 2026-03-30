@@ -94,7 +94,7 @@ function createExpenseRow(expense, elementType, tableRowId, createActionsTableDa
   newExpenseAmountElement.type = "number";
   newExpenseAmountElement.textContent = expense != null ? expense.amount.toString() : "";
   newExpenseAmountElement.min = "1";
-  newExpenseAmountElement.oninput = function() { validity.valid || (value = ''); };
+  newExpenseAmountElement.oninput = function() { this.validity.valid || (this.value = ""); };
   newExpenseAmountTableData.appendChild(newExpenseAmountElement);
 
   const newExpenseCostTableData = document.createElement("td");
@@ -103,8 +103,8 @@ function createExpenseRow(expense, elementType, tableRowId, createActionsTableDa
   newExpenseCostElement.id = `expense-cost-${expenseIdentifier}`;
   newExpenseCostElement.type = "number";
   newExpenseCostElement.textContent = expense != null ? "$" + expense.cost.toString() : "";
-  newExpenseCostElement.min = "1";
-  newExpenseCostElement.oninput = function() { validity.valid || (value = ''); };
+  newExpenseCostElement.min = "0";
+  newExpenseCostElement.oninput = function() { this.validity.valid || (this.value = ""); };
   newExpenseCostTableData.appendChild(newExpenseCostElement);
 
   const newExpenseDateTableData = document.createElement("td");
@@ -141,29 +141,30 @@ function createExpenseRow(expense, elementType, tableRowId, createActionsTableDa
 function addExpense() {
   const expenseToCreate = getExpenseValuesFromTableRow("new");
 
-
-  fetch(`http://localhost:3000/expenses/add`, {
+  if (validateExpense(expenseToCreate)) {
+    fetch(`http://localhost:3000/expenses/add`, {
     method: "POST",
     headers: {
       "Content-Type" : "application/json"
     },
     body: JSON.stringify(expenseToCreate)
-  })
-  .then((response) => {
-    if (response.ok) {
-      response.json()
-      .then((data) => {
-        expenseToCreate.id = data.id;
-        totalCost += expenseToCreate.cost * expenseToCreate.amount;
-        const tableBody = document.getElementById("expense-table-body");
-        tableBody.insertBefore(createExistingExpenseRow(expenseToCreate), tableBody.lastElementChild); //Adding the current expense row to the new/create expense so that it looks like the expense has been added
-        updateTotalCost();
-        clearAddExpenseRowInputs();
-      })
-      .catch((e) => console.log(e));
-    }
-  })
-  .catch((e) => console.log(e));
+    })
+    .then((response) => {
+      if (response.ok) {
+        response.json()
+        .then((data) => {
+          expenseToCreate.id = data.id;
+          totalCost += expenseToCreate.cost * expenseToCreate.amount;
+          const tableBody = document.getElementById("expense-table-body");
+          tableBody.insertBefore(createExistingExpenseRow(expenseToCreate), tableBody.lastElementChild); //Adding the current expense row to the new/create expense so that it looks like the expense has been added
+          updateTotalCost();
+          clearAddExpenseRowInputs();
+        })
+        .catch((e) => console.log(e));
+      }
+    })
+    .catch((e) => console.log(e));
+  }
 }
 
 function updateExpense(expenseToUpdateId) {
@@ -221,8 +222,11 @@ function clearAddExpenseRowInputs() {
   }
 }
 
-function validateExpense() {
-  if (!expenseToCreate.title || !expenseToCreate.cost || !expenseToCreate.amount || !expenseToCreate.date || !expenseToCreate.description) {
+function validateExpense(expense) {
+  if (!expense.title || !expense.cost || !expense.amount || !expense.date || !expense.description) {
     alert("Please ensure that all values have been provided before trying to add an expense!");
+    return false;
   }
+
+  return true;
 }
