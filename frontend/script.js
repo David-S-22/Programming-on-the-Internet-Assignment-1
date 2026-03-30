@@ -71,71 +71,71 @@ function createNewExpenseRow() {
 function createExpenseRow(expense, elementType, tableRowId, createActionsTableData) {
   const expenseIdentifier = expense != null ? expense.id.toString() : "new";
 
-  const newExpenseTitleTableData = document.createElement("td");
-  const newExpenseTitleElement = document.createElement(elementType);
-  newExpenseTitleElement.id = `expense-title-${expenseIdentifier}`;
-  newExpenseTitleElement.type = "text";
-  newExpenseTitleElement.textContent = expense != null ? expense.title : "";
-  newExpenseTitleTableData.className = "expense-table-data";
-  newExpenseTitleTableData.appendChild(newExpenseTitleElement);
+  const expenseTitleTableData = document.createElement("td");
+  const expenseTitleElement = document.createElement(elementType);
+  expenseTitleElement.id = `expense-title-${expenseIdentifier}`;
+  expenseTitleElement.type = "text";
+  expenseTitleElement.textContent = expense != null ? expense.title : "";
+  expenseTitleTableData.className = "expense-table-data";
+  expenseTitleTableData.appendChild(expenseTitleElement);
 
-  const newExpenseCategoryTableData = document.createElement("td");
-  newExpenseCategoryTableData.className = "expense-table-data";
-  const newExpenseCategoryElement = document.createElement(elementType);
-  newExpenseCategoryElement.id = `expense-category-${expenseIdentifier}`;
-  newExpenseCategoryElement.type = "text";
-  newExpenseCategoryElement.textContent = expense != null ? expense.category : "";
-  newExpenseCategoryTableData.appendChild(newExpenseCategoryElement);
+  const expenseCategoryTableData = document.createElement("td");
+  expenseCategoryTableData.className = "expense-table-data";
+  const expenseCategoryElement = document.createElement(elementType);
+  expenseCategoryElement.id = `expense-category-${expenseIdentifier}`;
+  expenseCategoryElement.type = "text";
+  expenseCategoryElement.textContent = expense != null ? expense.category : "";
+  expenseCategoryTableData.appendChild(expenseCategoryElement);
 
-  const newExpenseAmountTableData = document.createElement("td");
-  newExpenseAmountTableData.className = "expense-table-data";
-  const newExpenseAmountElement = document.createElement(elementType);
-  newExpenseAmountElement.id = `expense-amount-${expenseIdentifier}`;
-  newExpenseAmountElement.type = "number";
-  newExpenseAmountElement.textContent = expense != null ? expense.amount.toString() : "";
-  newExpenseAmountElement.min = "1";
-  newExpenseAmountElement.oninput = function() { this.validity.valid || (this.value = ""); };
-  newExpenseAmountTableData.appendChild(newExpenseAmountElement);
+  const expenseAmountTableData = document.createElement("td");
+  expenseAmountTableData.className = "expense-table-data";
+  const expenseAmountElement = document.createElement(elementType);
+  expenseAmountElement.id = `expense-amount-${expenseIdentifier}`;
+  expenseAmountElement.type = "number";
+  expenseAmountElement.textContent = expense != null ? expense.amount.toString() : "";
+  expenseAmountElement.min = "1";
+  expenseAmountElement.oninput = function() { this.validity.valid || (this.value = ""); };
+  expenseAmountTableData.appendChild(expenseAmountElement);
 
-  const newExpenseCostTableData = document.createElement("td");
-  newExpenseCostTableData.className = "expense-table-data";
-  const newExpenseCostElement = document.createElement(elementType);
-  newExpenseCostElement.id = `expense-cost-${expenseIdentifier}`;
-  newExpenseCostElement.type = "number";
-  newExpenseCostElement.textContent = expense != null ? "$" + expense.cost.toString() : "";
-  newExpenseCostElement.min = "0";
-  newExpenseCostElement.oninput = function() { this.validity.valid || (this.value = ""); };
-  newExpenseCostTableData.appendChild(newExpenseCostElement);
+  const expenseCostTableData = document.createElement("td");
+  expenseCostTableData.className = "expense-table-data";
+  const expenseCostElement = document.createElement(elementType);
+  expenseCostElement.id = `expense-cost-${expenseIdentifier}`;
+  expenseCostElement.type = "number";
+  expenseCostElement.textContent = expense != null ? "$" + expense.cost.toString() : "";
+  expenseCostElement.min = "0";
+  expenseCostElement.oninput = function() { this.validity.valid || (this.value = ""); };
+  expenseCostTableData.appendChild(expenseCostElement);
 
-  const newExpenseDateTableData = document.createElement("td");
-  newExpenseDateTableData.className = "expense-table-data";
-  const newExpenseDateElement = document.createElement(elementType);
-  newExpenseDateElement.id = `expense-date-${expenseIdentifier}`;
-  newExpenseDateElement.type = "date";
-  newExpenseDateElement.textContent = expense != null ? new Date(expense.date).toLocaleString([], { year : "numeric", month : "numeric", day : "numeric" }) : "";
-  newExpenseDateTableData.appendChild(newExpenseDateElement);
+  const expenseDateTableData = document.createElement("td");
+  expenseDateTableData.className = "expense-table-data";
+  const expenseDateElement = document.createElement(elementType);
+  expenseDateElement.id = `expense-date-${expenseIdentifier}`;
+  expenseDateElement.type = "date";
+  expenseDateElement.textContent = expense != null ? new Date(expense.date).toLocaleString([], { year : "numeric", month : "numeric", day : "numeric" }) : "";
+  expenseDateTableData.appendChild(expenseDateElement);
 
-  const newExpenseDescriptionTableData = document.createElement("td");
-  newExpenseDescriptionTableData.className = "expense-table-data";
-  const newExpenseDescriptionElement = document.createElement(elementType);
-  newExpenseDescriptionElement.id = `expense-description-${expenseIdentifier}`;
-  newExpenseDescriptionElement.type = "text";
-  newExpenseDescriptionElement.textContent = expense != null ? expense.description : "";
-  newExpenseDescriptionTableData.appendChild(newExpenseDescriptionElement);
+  const expenseDescriptionTableData = document.createElement("td");
+  expenseDescriptionTableData.className = "expense-table-data";
+  const expenseDescriptionElement = document.createElement(elementType);
+  expenseDescriptionElement.id = `expense-description-${expenseIdentifier}`;
+  expenseDescriptionElement.type = "text";
+  expenseDescriptionElement.textContent = expense != null ? expense.description : "";
+  expenseDescriptionTableData.appendChild(expenseDescriptionElement);
 
-  const newExpenseActionsTableData = createActionsTableData();
+  const expenseActionsTableData = createActionsTableData();
 
-  const newExpenseTableRow = document.createElement("tr");
-  newExpenseTableRow.id =  tableRowId;
-  newExpenseTableRow.appendChild(newExpenseTitleTableData);
-  newExpenseTableRow.appendChild(newExpenseCategoryTableData);
-  newExpenseTableRow.appendChild(newExpenseAmountTableData);
-  newExpenseTableRow.appendChild(newExpenseCostTableData);
-  newExpenseTableRow.appendChild(newExpenseDateTableData);
-  newExpenseTableRow.appendChild(newExpenseDescriptionTableData);
-  newExpenseTableRow.appendChild(newExpenseActionsTableData);
+  const expenseTableRow = document.createElement("tr");
+  expenseTableRow.id =  tableRowId;
+  expenseTableRow.appendChild(expenseTitleTableData);
+  expenseTableRow.appendChild(expenseCategoryTableData);
+  expenseTableRow.appendChild(expenseAmountTableData);
+  expenseTableRow.appendChild(expenseCostTableData);
+  expenseTableRow.appendChild(expenseDateTableData);
+  expenseTableRow.appendChild(expenseDescriptionTableData);
+  expenseTableRow.appendChild(expenseActionsTableData);
   
-  return newExpenseTableRow;
+  return expenseTableRow;
 }
 
 function addExpense() {
