@@ -39,3 +39,8 @@ table, th, td {
   padding-left: 8px;
   padding-right: 8px;
 }
+
+.new-expense-table-data-span {
+  display: flex;
+  align-content: center;
+}
