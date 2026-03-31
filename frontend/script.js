@@ -1,18 +1,19 @@
 var totalCost = 0;
+const expenseCategories = ["Select Category", "Travel", "Groceries", "Personal", "Utilities", "Transport"];
 
 function getAllExpenses() {
   fetch("http://localhost:3000/expenses")
-    .then((data) => {
-      //Getting the table body here so that we don't have to get it multiple times for the db expense rows and new expense row
-      const tableBody = document.getElementById("expense-table-body");
-      data.json()
-        .then((expenses) => {
-          populateExpenseTable(expenses, tableBody);
-          tableBody.appendChild(createNewExpenseRow());
-        })
-        .catch((e) => console.log(e));
-    })
-    .catch((e) => console.log(e));
+  .then((data) => {
+    //Getting the table body here so that we don't have to get it multiple times
+    const tableBody = document.getElementById("expense-table-body");
+    data.json()
+      .then((expenses) => {
+        populateExpenseTable(expenses, tableBody);
+        tableBody.appendChild(createNewExpenseRow());
+      })
+      .catch((e) => console.log(e));
+  })
+  .catch((e) => console.log(e));
 }
 
 function populateExpenseTable(expenses, tableBody) {
@@ -25,51 +26,46 @@ function populateExpenseTable(expenses, tableBody) {
 }
 
 function createExistingExpenseRow(expense) {
-  const createActionsTableData = () => {
-    const editActionButton = document.createElement("button");
-    editActionButton.innerText = "🖉"
-    editActionButton.className = "expense-table-action-button";
-    editActionButton.onclick = () => updateExpense(expense.id);
+  const editActionButton = document.createElement("button");
+  editActionButton.innerText = "🖉"
+  editActionButton.className = "expense-table-action-button";
+  editActionButton.onclick = () => updateExpense(expense.id);
 
-    const deleteActionButton = document.createElement("button");
-    deleteActionButton.innerText = "🗑"
-    deleteActionButton.className = "expense-table-action-button expense-table-delete-action-button";
-    deleteActionButton.onclick = () => deleteExpense(expense.id);
+  const deleteActionButton = document.createElement("button");
+  deleteActionButton.innerText = "🗑"
+  deleteActionButton.className = "expense-table-action-button expense-table-delete-action-button";
+  deleteActionButton.onclick = () => deleteExpense(expense.id);
 
-    const expenseActionsSpan = document.createElement("span");
-    expenseActionsSpan.append(editActionButton);
-    expenseActionsSpan.append(deleteActionButton);
-    
-    const expenseActionsTableData = document.createElement("td");
-    expenseActionsTableData.className = "expense-table-data";
-    expenseActionsTableData.appendChild(expenseActionsSpan);
+  const expenseActionsSpan = document.createElement("span");
+  expenseActionsSpan.append(editActionButton);
+  expenseActionsSpan.append(deleteActionButton);
+  
+  const expenseActionsTableData = document.createElement("td");
+  expenseActionsTableData.className = "expense-table-data";
+  expenseActionsTableData.appendChild(expenseActionsSpan);
 
-    return expenseActionsTableData;
-  }
-
-  return createExpenseRow(expense, "span", `expense-table-row-${expense.id.toString()}`, createActionsTableData);
+  return createExpenseRow(expense, "span", `expense-table-row-${expense.id.toString()}`, expenseActionsTableData);
 }
 
 function createNewExpenseRow() {
-  const createAddExpenseRowActionButton = () => {
-    const newExpenseAddButton = document.createElement("button");
-    newExpenseAddButton.innerText = "+"
-    newExpenseAddButton.onclick = () => addExpense();
+  const newExpenseAddButton = document.createElement("button");
+  newExpenseAddButton.innerText = "+"
+  newExpenseAddButton.onclick = () => addExpense();
 
-    const newExpenseActionsSpan = document.createElement("span");
-    newExpenseActionsSpan.append(newExpenseAddButton);
-    const newExpenseActionsTableData = document.createElement("td");
-    newExpenseActionsTableData.className = "expense-table-data";
-    newExpenseActionsTableData.appendChild(newExpenseActionsSpan);
-
-    return newExpenseActionsTableData;
-  }
+  const newExpenseActionsSpan = document.createElement("span");
+  newExpenseActionsSpan.append(newExpenseAddButton);
   
-  return createExpenseRow(null, "input", "expense-table-row-new", createAddExpenseRowActionButton);
+  const newExpenseActionsTableData = document.createElement("td");
+  newExpenseActionsTableData.className = "expense-table-data";
+  newExpenseActionsTableData.appendChild(newExpenseActionsSpan);
+
+  
+  return createExpenseRow(null, "input", "expense-table-row-new", newExpenseActionsTableData);
 }
 
-function createExpenseRow(expense, elementType, tableRowId, createActionsTableData) {
+function createExpenseRow(expense, elementType, tableRowId, actionsTableDataElement) {
   const expenseIdentifier = expense != null ? expense.id.toString() : "new";
+  const categoryElementType = elementType == "span" ? elementType : "select"
 
   const expenseTitleTableData = document.createElement("td");
   const expenseTitleElement = document.createElement(elementType);
@@ -81,10 +77,23 @@ function createExpenseRow(expense, elementType, tableRowId, createActionsTableDa
 
   const expenseCategoryTableData = document.createElement("td");
   expenseCategoryTableData.className = "expense-table-data";
-  const expenseCategoryElement = document.createElement(elementType);
+  const expenseCategoryElement = document.createElement(categoryElementType);
   expenseCategoryElement.id = `expense-category-${expenseIdentifier}`;
   expenseCategoryElement.type = "text";
-  expenseCategoryElement.textContent = expense != null ? expense.category : "";
+
+  if (categoryElementType == "select") {
+    for (var category of expenseCategories) {
+      const categoryOption = document.createElement("option");
+      categoryOption.value = category;
+      categoryOption.textContent = category;
+      expenseCategoryElement.appendChild(categoryOption);
+    }
+
+    expenseCategoryElement.value = expense != null ? expense.category : expenseCategories[0];
+  }
+  else {
+    expenseCategoryElement.textContent = expense != null ? expense.category : "";
+  }
   expenseCategoryTableData.appendChild(expenseCategoryElement);
 
   const expenseAmountTableData = document.createElement("td");
@@ -123,7 +132,7 @@ function createExpenseRow(expense, elementType, tableRowId, createActionsTableDa
   expenseDescriptionElement.textContent = expense != null ? expense.description : "";
   expenseDescriptionTableData.appendChild(expenseDescriptionElement);
 
-  const expenseActionsTableData = createActionsTableData();
+  const expenseActionsTableData = actionsTableDataElement;
 
   const expenseTableRow = document.createElement("tr");
   expenseTableRow.id =  tableRowId;
@@ -184,17 +193,17 @@ function deleteExpense(expenseToRemoveId) {
     fetch(`http://localhost:3000/expenses/${expenseToRemoveId}`, {
       method: "DELETE",
     })
-      .then((result) => {
-        if (result.ok) {
-          rowToDelete.remove();
-          totalCost -= expenseCost * expenseAmount;
-          updateTotalCost();
-        }
-        else {
-          alert("An error has occured please try again.");
-        }
-      })
-      .catch((e) => console.log(e));
+    .then((result) => {
+      if (result.ok) {
+        rowToDelete.remove();
+        totalCost -= expenseCost * expenseAmount;
+        updateTotalCost();
+      }
+      else {
+        alert("An error has occured please try again.");
+      }
+    })
+    .catch((e) => console.log(e));
   }
 }
 
@@ -223,7 +232,7 @@ function clearAddExpenseRowInputs() {
 }
 
 function validateExpense(expense) {
-  if (!expense.title || !expense.cost || !expense.amount || !expense.date || !expense.description) {
+  if (!expense.title || expense.category === expenseCategories[0] || !expense.cost || !expense.amount || !expense.date || !expense.description) {
     alert("Please ensure that all values have been provided before trying to add an expense!");
     return false;
   }
