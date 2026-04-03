@@ -44,7 +44,7 @@ function createExistingExpenseRow(expense) {
   expenseActionsTableData.className = "expense-table-data";
   expenseActionsTableData.appendChild(expenseActionsSpan);
 
-  return createExpenseRow(expense, "span", `expense-table-row-${expense.id.toString()}`, expenseActionsTableData);
+  return createExpenseRow(expense, "READ", `expense-table-row-${expense.id.toString()}`, expenseActionsTableData);
 }
 
 function createNewExpenseRow() {
@@ -60,90 +60,115 @@ function createNewExpenseRow() {
   newExpenseActionsTableData.appendChild(newExpenseActionsSpan);
 
   
-  return createExpenseRow(null, "input", "expense-table-row-new", newExpenseActionsTableData);
+  return createExpenseRow(null, "WRITE", "expense-table-row-new", newExpenseActionsTableData);
 }
 
-function createExpenseRow(expense, elementType, tableRowId, actionsTableDataElement) {
+// Element type creators
+function createSpanElement(elementId, value) {
+  const element = document.createElement("span");
+  element.id = elementId;
+  element.textContent = value || "";
+  return element;
+}
+
+function createInputElement(elementId, type, value, config = {}) {
+  const element = document.createElement("input");
+  element.id = elementId;
+  element.type = type;
+  element.value = value || "";
+
+  if (type === "number") {
+    element.min = config.min || "0";
+    element.oninput = function() { this.validity.valid || (this.value = ""); };
+  }
+
+  return element;
+}
+
+function createSelectElement(elementId, options, selectedValue) {
+  const element = document.createElement("select");
+  element.id = elementId;
+
+  for (const optionValue of options) {
+    const option = document.createElement("option");
+    option.value = optionValue;
+    option.textContent = optionValue;
+    element.appendChild(option);
+  }
+
+  element.value = selectedValue || (options.length > 0 ? options[0] : "");
+  return element;
+}
+
+function createExpenseRow(expense, mode, tableRowId, actionsTableDataElement) {
   const expenseIdentifier = expense != null ? expense.id.toString() : "new";
-  const categoryElementType = elementType == "span" ? elementType : "select"
+  const isReadMode = mode === "READ";
 
+  // Create Title field (WRITE: input, READ: span)
   const expenseTitleTableData = document.createElement("td");
-  const expenseTitleElement = document.createElement(elementType);
-  expenseTitleElement.id = `expense-title-${expenseIdentifier}`;
-  expenseTitleElement.type = "text";
-  expenseTitleElement.textContent = expense != null ? expense.title : "";
   expenseTitleTableData.className = "expense-table-data";
-  expenseTitleTableData.appendChild(expenseTitleElement);
+  const titleElement = isReadMode
+    ? createSpanElement(`expense-title-${expenseIdentifier}`, expense?.title || "")
+    : createInputElement(`expense-title-${expenseIdentifier}`, "text", expense?.title || "");
+  expenseTitleTableData.appendChild(titleElement);
 
+  // Create Category field (WRITE: select, READ: span)
   const expenseCategoryTableData = document.createElement("td");
   expenseCategoryTableData.className = "expense-table-data";
-  const expenseCategoryElement = document.createElement(categoryElementType);
-  expenseCategoryElement.id = `expense-category-${expenseIdentifier}`;
-  expenseCategoryElement.type = "text";
+  const categoryElement = isReadMode
+    ? createSpanElement(`expense-category-${expenseIdentifier}`, expense?.category || "")
+    : createSelectElement(`expense-category-${expenseIdentifier}`, expenseCategories, expense?.category);
+  expenseCategoryTableData.appendChild(categoryElement);
 
-  if (categoryElementType == "select") {
-    for (var category of expenseCategories) {
-      const categoryOption = document.createElement("option");
-      categoryOption.value = category;
-      categoryOption.textContent = category;
-      expenseCategoryElement.appendChild(categoryOption);
-    }
-
-    expenseCategoryElement.value = expense != null ? expense.category : expenseCategories[0];
-  }
-  else {
-    expenseCategoryElement.textContent = expense != null ? expense.category : "";
-  }
-  expenseCategoryTableData.appendChild(expenseCategoryElement);
-
+  // Create Amount field (WRITE: number input, READ: span)
   const expenseAmountTableData = document.createElement("td");
   expenseAmountTableData.className = "expense-table-data";
-  const expenseAmountElement = document.createElement(elementType);
-  expenseAmountElement.id = `expense-amount-${expenseIdentifier}`;
-  expenseAmountElement.type = "number";
-  expenseAmountElement.textContent = expense != null ? expense.amount.toString() : "";
-  expenseAmountElement.min = "1";
-  expenseAmountElement.oninput = function() { this.validity.valid || (this.value = ""); };
-  expenseAmountTableData.appendChild(expenseAmountElement);
+  const amountElement = isReadMode
+    ? createSpanElement(`expense-amount-${expenseIdentifier}`, expense?.amount.toString() || "")
+    : createInputElement(`expense-amount-${expenseIdentifier}`, "number", expense?.amount.toString() || "", { min: "1" });
+  expenseAmountTableData.appendChild(amountElement);
 
+  // Create Cost field (WRITE: number input, READ: span with $ prefix)
   const expenseCostTableData = document.createElement("td");
   expenseCostTableData.className = "expense-table-data";
-  const expenseCostElement = document.createElement(elementType);
-  expenseCostElement.id = `expense-cost-${expenseIdentifier}`;
-  expenseCostElement.type = "number";
-  expenseCostElement.textContent = expense != null ? "$" + expense.cost.toString() : "";
-  expenseCostElement.min = "0";
-  expenseCostElement.oninput = function() { this.validity.valid || (this.value = ""); };
-  expenseCostTableData.appendChild(expenseCostElement);
+  const costDisplayValue = isReadMode 
+    ? (expense?.cost ? "$" + expense.cost.toString() : "")
+    : (expense?.cost?.toString() || "");
+  const costElement = isReadMode
+    ? createSpanElement(`expense-cost-${expenseIdentifier}`, costDisplayValue)
+    : createInputElement(`expense-cost-${expenseIdentifier}`, "number", costDisplayValue, { min: "0" });
+  expenseCostTableData.appendChild(costElement);
 
+  // Create Date field (WRITE: date input, READ: span with formatted date)
   const expenseDateTableData = document.createElement("td");
   expenseDateTableData.className = "expense-table-data";
-  const expenseDateElement = document.createElement(elementType);
-  expenseDateElement.id = `expense-date-${expenseIdentifier}`;
-  expenseDateElement.type = "date";
-  expenseDateElement.textContent = expense != null ? new Date(expense.date).toLocaleString([], { year : "numeric", month : "numeric", day : "numeric" }) : "";
-  expenseDateTableData.appendChild(expenseDateElement);
+  const dateDisplayValue = expense?.date 
+    ? new Date(expense.date).toLocaleString([], { year: "numeric", month: "numeric", day: "numeric" })
+    : "";
+  const dateElement = isReadMode
+    ? createSpanElement(`expense-date-${expenseIdentifier}`, dateDisplayValue)
+    : createInputElement(`expense-date-${expenseIdentifier}`, "date", expense?.date || "");
+  expenseDateTableData.appendChild(dateElement);
 
+  // Create Description field (WRITE: input, READ: span)
   const expenseDescriptionTableData = document.createElement("td");
   expenseDescriptionTableData.className = "expense-table-data";
-  const expenseDescriptionElement = document.createElement(elementType);
-  expenseDescriptionElement.id = `expense-description-${expenseIdentifier}`;
-  expenseDescriptionElement.type = "text";
-  expenseDescriptionElement.textContent = expense != null ? expense.description : "";
-  expenseDescriptionTableData.appendChild(expenseDescriptionElement);
+  const descriptionElement = isReadMode
+    ? createSpanElement(`expense-description-${expenseIdentifier}`, expense?.description || "")
+    : createInputElement(`expense-description-${expenseIdentifier}`, "text", expense?.description || "");
+  expenseDescriptionTableData.appendChild(descriptionElement);
 
-  const expenseActionsTableData = actionsTableDataElement;
-
+  // Assemble table row
   const expenseTableRow = document.createElement("tr");
-  expenseTableRow.id =  tableRowId;
+  expenseTableRow.id = tableRowId;
   expenseTableRow.appendChild(expenseTitleTableData);
   expenseTableRow.appendChild(expenseCategoryTableData);
   expenseTableRow.appendChild(expenseAmountTableData);
   expenseTableRow.appendChild(expenseCostTableData);
   expenseTableRow.appendChild(expenseDateTableData);
   expenseTableRow.appendChild(expenseDescriptionTableData);
-  expenseTableRow.appendChild(expenseActionsTableData);
-  
+  expenseTableRow.appendChild(actionsTableDataElement);
+
   return expenseTableRow;
 }
 
@@ -227,7 +252,13 @@ function clearAddExpenseRowInputs() {
   const addExpenseRow = document.getElementById("expense-table-row-new");
 
   for (var i = 0; i < addExpenseRow.childElementCount - 1; i++) {
-    addExpenseRow.children[i].children[0].value = ""; //Setting the input to an empty string so the user does not have to clear it
+    const currentElement = addExpenseRow.children[i].children[0];
+    if (currentElement.tagName.toLowerCase() === "select") {
+      currentElement.value = expenseCategories[0];
+    }
+    else {
+      currentElement.value = ""; //Setting the input to an empty string so the user does not have to clear it
+    }
   }
 }
 
