@@ -7,9 +7,11 @@ const expenseCategories = ["Select Category", "Travel", "Groceries", "Personal",
 function App() {
 const [expenses, setExpenses] = useState<expense[]>([]);
 const [expenseToEdit, setExpenseToEdit] = useState<number>(-1);
+const [errorMessage, setErrorMessage] = useState<string>("");
 const newExpense = useRef<expense>({} as expense);
 const editedExpense = useRef<expense>({} as expense);
 
+//This effect is used to get all of the expenses currently in the DB and then populate the expense array after the inital render has occured.
 useEffect(() => {
   fetch("http://localhost:3000/expenses")
   .then((data) => {
@@ -17,25 +19,28 @@ useEffect(() => {
       .then((expenses: expense[]) => {
         setExpenses(expenses);
       })
-      .catch((e) => console.log(e));
+      .catch((e) => setErrorMessage(e));
   })
-  .catch((e) => console.log(e));
+  .catch((e) => setErrorMessage(e));
 }, []);
 
 
 function DeleteExpense(expenseToDelete : expense) {
+  //Confirming the user's actions so they have a chance to go back before they perform this non-reversable action
   const confirmation = confirm(`Are you sure you want to remove the expense with the title "${expenseToDelete.title}" on the date "${new Date(expenseToDelete.date).toLocaleDateString()}"`)
 
   if (confirmation) {
     fetch(`http://localhost:3000/expenses/${expenseToDelete.id}`, {
       method: "DELETE",
     })
-      .then((result) => {
-        if (result.ok) {
-          const newExpenses = expenses.filter((expense) => expense.id !== expenseToDelete.id);
-          setExpenses(newExpenses);
-        }
+    .then((result) => {
+      if (result.ok) {
+        //Creating a new expense array without the deleted expense so we can then re-set the expense array as react state variables are immutable.
+        const newExpenses = expenses.filter((expense) => expense.id !== expenseToDelete.id);
+        setExpenses(newExpenses);
+      }
     })
+    .catch((e) => setErrorMessage(e));
   }
 }
 
@@ -55,17 +60,17 @@ function addExpense() {
     // })
 }
 
-function validateInputNumber(event : ChangeEvent<HTMLInputElement, HTMLInputElement>, minNumber : number) {
-  const inputToValidate = event.target.value;
-  const eventValueAsNumber = Number(inputToValidate);
-  if (isNaN(eventValueAsNumber) || eventValueAsNumber < minNumber) {
-    //
-  }
+function validateNumberInput(event : React.InputEvent<HTMLInputElement>, propertyToSet: number ) {
+  
 }
 
   return (
     <>
       <h1>Welcome to your Expense Tracker</h1>
+      { //If an error message has been set we display it otherwise at the top to let the user know that an error has occured
+        errorMessage !== "" 
+        ? <h2 className='errorMessage'>{`Page could not be loaded or updated because an error occured, please try again later. Error: ${errorMessage}`}</h2> 
+        : <></> }
       <h2 id="logbook-header">Your Expense Logbook</h2>
       <table id="expenses-table">
         <thead id="expenses-table-header">
@@ -113,7 +118,7 @@ function validateInputNumber(event : ChangeEvent<HTMLInputElement, HTMLInputElem
                 <td className="expense-table-data">
                   {
                     expense.id === expenseToEdit 
-                      ? <input type="number" min="0" />
+                      ? <input type="number" min="0" onInput={(e) => e.currentTarget.validity.valid || (e.currentTarget.value = "")} />
                       : <span>${expense.cost}</span>
                   }
                 </td>
@@ -135,6 +140,8 @@ function validateInputNumber(event : ChangeEvent<HTMLInputElement, HTMLInputElem
                   {
                     expense.id === expenseToEdit 
                       ? <span>
+                        <button onClick={() => setExpenseToEdit(-1)}>Cancel</button>
+                        <button >Confirm</button>
                       </span> 
                       : <span>
                         <button onClick={() => markExpenseAsBeingEdited(expense)}>Edit</button>

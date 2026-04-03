@@ -1,14 +1,6 @@
 import type { RequestGenericInterface } from "fastify";
+import type { expense } from "../../common/types.js"
 
-type expense = { 
-  id: number;
-  title: string;
-  category: string;
-  amount: number;
-  cost: number;
-  date: Date;
-  description: string;
-};
 
 interface ExpenseIdRequest extends RequestGenericInterface {
   Params: {
@@ -24,4 +16,4 @@ interface ExpenseUpdateRequest extends ExpenseIdRequest {
   Body: expense 
 };
 
-export { type expense, ExpenseIdRequest, ExpenseCreationRequest, ExpenseUpdateRequest }
+export { ExpenseIdRequest, ExpenseCreationRequest, ExpenseUpdateRequest }

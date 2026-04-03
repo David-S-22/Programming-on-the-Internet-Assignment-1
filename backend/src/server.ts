@@ -1,7 +1,8 @@
 import Fastify from 'fastify'
 import fastifypg from '@fastify/postgres'
 import dotenv from "dotenv";
-import type { expense, ExpenseCreationRequest, ExpenseIdRequest, ExpenseUpdateRequest } from './types.js';
+import type { ExpenseCreationRequest, ExpenseIdRequest, ExpenseUpdateRequest } from './types.js';
+import type { expense } from '../../common/types.js';
 
 dotenv.config({ path: "./.env", override: true });
 
