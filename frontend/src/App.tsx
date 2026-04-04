@@ -5,6 +5,7 @@ import EditableExpenseCell from './components/EditableExpenseCell'
 import type { expense } from "../../common/types.d.ts"
 
 const expenseCategories = ["Select Category", "Travel", "Groceries", "Personal", "Utilities", "Transport"];
+const periodFilters = ["Select Period", 3, 6, 9, 12];
 
 const defaultExpense: expense = {
   id: NaN,
@@ -22,6 +23,8 @@ function App() {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [newExpense, setNewExpense] = useState<expense>({ ...defaultExpense });
   const [totalCost, setTotalCost] = useState<number>(0);
+  const [categoryFilter, setCategoryFilter] = useState<string>(expenseCategories[0]);
+  const [periodFilter, setPeriodFilter] = useState<string | number>(periodFilters[0]);
 
   //This method is used to create the error messages for when the system has come into a problem. As the message for this kind of error should be the same I extracted it out into this helper method to reduce repetition 
   function setSystemErrorMessage(error : Error | string) {
@@ -55,6 +58,11 @@ function App() {
     })
     .catch((e) => setSystemErrorMessage(e));
   }, []);
+
+  useEffect(() => {
+    console.log(categoryFilter);
+    console.log(periodFilter);
+  }, [categoryFilter, periodFilter]);
 
 
   function DeleteExpense(expenseToDelete : expense) {
@@ -152,10 +160,30 @@ function App() {
         ? <h2 id='errorMessage'>{errorMessage}</h2> 
         : <></> }
       <h2 id="logbook-header">Your Expense Logbook</h2>
-      <span id="criteria-filters">
-        <select></select>
-        <select></select>
-      </span>
+      <div className="criteria-filters">
+        <p id="filter-text">Filters:</p>
+        <select className="expense-filter-select"
+          onChange={(e) => {
+            setCategoryFilter(e.target.value);
+          }}
+        >
+          {expenseCategories.map((category) => {
+            return (
+              <option key={category}>{category}</option>
+            )
+          })}
+        </select >
+        <select className="expense-filter-select"
+          onChange={(e) => {
+            setPeriodFilter(Number(e.target.value))
+          }}>
+          {periodFilters.map((period) => {
+            return (
+              <option key={period}>{period}</option>
+            )
+          })}
+        </select>
+      </div>
       <table id="expenses-table">
         <thead id="expenses-table-header">
           <tr>

@@ -11,7 +11,7 @@ type EditableExpenseCellProps = {
 }
 
 function EditableExpenseCell(props: EditableExpenseCellProps) {
-  var editingElement;
+  let editingElement;
 
   if (props.inputType === 'text') {
     editingElement = (
