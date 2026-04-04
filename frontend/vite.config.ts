@@ -8,5 +8,6 @@ export default defineConfig({
     watch: {
       usePolling: true
     }
-  }
+  },
+  base: "http://localhost:5173/"
 })

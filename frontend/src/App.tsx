@@ -1,77 +1,161 @@
-import { useEffect, useRef, useState, type ChangeEvent,  } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
-import type { expense } from "../../common/types"
+import DateInput from './components/DateInput'
+import EditableExpenseCell from './components/EditableExpenseCell'
+import type { expense } from "../../common/types.d.ts"
 
 const expenseCategories = ["Select Category", "Travel", "Groceries", "Personal", "Utilities", "Transport"];
 
+const defaultExpense: expense = {
+  id: NaN,
+  title: "",
+  category: expenseCategories[0],
+  amount: NaN,
+  cost: NaN,
+  date: new Date(),
+  description: "",
+};
+
 function App() {
-const [expenses, setExpenses] = useState<expense[]>([]);
-const [expenseToEdit, setExpenseToEdit] = useState<number>(-1);
-const [errorMessage, setErrorMessage] = useState<string>("");
-const newExpense = useRef<expense>({} as expense);
-const editedExpense = useRef<expense>({} as expense);
+  const [expenses, setExpenses] = useState<expense[]>([]);
+  const [expenseToEdit, setExpenseToEdit] = useState<expense>({ ...defaultExpense });
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [newExpense, setNewExpense] = useState<expense>({ ...defaultExpense });
+  const [totalCost, setTotalCost] = useState<number>(0);
 
-//This effect is used to get all of the expenses currently in the DB and then populate the expense array after the inital render has occured.
-useEffect(() => {
-  fetch("http://localhost:3000/expenses")
-  .then((data) => {
-    data.json()
-      .then((expenses: expense[]) => {
-        setExpenses(expenses);
-      })
-      .catch((e) => setErrorMessage(e));
-  })
-  .catch((e) => setErrorMessage(e));
-}, []);
-
-
-function DeleteExpense(expenseToDelete : expense) {
-  //Confirming the user's actions so they have a chance to go back before they perform this non-reversable action
-  const confirmation = confirm(`Are you sure you want to remove the expense with the title "${expenseToDelete.title}" on the date "${new Date(expenseToDelete.date).toLocaleDateString()}"`)
-
-  if (confirmation) {
-    fetch(`http://localhost:3000/expenses/${expenseToDelete.id}`, {
-      method: "DELETE",
-    })
-    .then((result) => {
-      if (result.ok) {
-        //Creating a new expense array without the deleted expense so we can then re-set the expense array as react state variables are immutable.
-        const newExpenses = expenses.filter((expense) => expense.id !== expenseToDelete.id);
-        setExpenses(newExpenses);
-      }
-    })
-    .catch((e) => setErrorMessage(e));
+  //This method is used to create the error messages for when the system has come into a problem. As the message for this kind of error should be the same I extracted it out into this helper method to reduce repetition 
+  function setSystemErrorMessage(error : Error | string) {
+    console.log(error);
+    const message = `Page could not be loaded or updated because an error occured, please try again later.`;
+    setErrorMessage(message);
   }
-}
 
-function markExpenseAsBeingEdited(expenseBeingEdited : expense) {
-  editedExpense.current = expenseBeingEdited;
-  setExpenseToEdit(expenseBeingEdited.id);
-}
+  function isExpressionInvalid(expenseToCheck : expense) : boolean {
+    return expenseToCheck.title === "" 
+      || expenseToCheck.category === "" 
+      || expenseToCheck.category === expenseCategories[0]
+      || isNaN(expenseToCheck.cost) 
+      || isNaN(expenseToCheck.amount) 
+      || isNaN(expenseToCheck.date.getTime()) //The reason why we check if the gotten time is NaN is because there's no way to my knowledge and research to determine if a date is valid outside of a method like this
+      || expenseToCheck.description === "";
+  }
 
-function addExpense() {
-  console.log(newExpense.current);
-    // fetch(`http://localhost:3000/expenses/add`, {
-    // method: "POST",
-    // headers: {
-    //   "Content-Type" : "application/json"
-    // },
-    //   body: JSON.stringify()
-    // })
-}
+  //This effect is used to get all of the expenses currently in the DB and then populate the expense array after the inital render has occured, so we can populate the expense table
+  useEffect(() => {
+    fetch("http://localhost:3000/expenses")
+    .then((data) => {
+      data.json()
+        .then((expenses: expense[]) => {
+          let cost = 0;
+          expenses.forEach((expense) => cost += expense.cost * expense.amount);
+          setExpenses(expenses);
+          setTotalCost(cost);
+        })
+        .catch((e) => setSystemErrorMessage(e));
+    })
+    .catch((e) => setSystemErrorMessage(e));
+  }, []);
 
-function validateNumberInput(event : React.InputEvent<HTMLInputElement>, propertyToSet: number ) {
-  
-}
+
+  function DeleteExpense(expenseToDelete : expense) {
+    //Confirming the user's actions so they have a chance to go back before they perform this non-reversable action
+    const confirmation = confirm(`Are you sure you want to remove the expense with the title "${expenseToDelete.title}" on the date "${new Date(expenseToDelete.date).toLocaleDateString()}"`)
+
+    if (confirmation) {
+      fetch(`http://localhost:3000/expenses/${expenseToDelete.id}`, {
+        method: "DELETE",
+      })
+      .then((result) => {
+        if (result.ok) {
+          //Creating a new expense array without the deleted expense so we can then re-set the expense array as react state variables are immutable.
+          const newExpenses = expenses.filter((expense) => expense.id !== expenseToDelete.id);
+          const newTotalCost = totalCost - expenseToDelete.cost * expenseToDelete.amount;
+          setExpenses(newExpenses);
+          setTotalCost(newTotalCost);
+        }
+      })
+      .catch((e) => setSystemErrorMessage(e));
+    }
+  }
+
+  function addExpense() {
+    if (isExpressionInvalid(newExpense)) {
+      setErrorMessage("The expense you tried to add is incorrect. Please ensure all fields are filled out properly before you try again.");
+      return;
+    }
+
+    fetch(`http://localhost:3000/expenses/add`, {
+    method: "POST",
+    headers: {
+      "Content-Type" : "application/json"
+    },
+      body: JSON.stringify(newExpense)
+    })
+    .then((response) => {
+      response.json()
+      .then((data : number | string) => {
+        if (!response.ok) {
+          setErrorMessage(data as string);
+          setNewExpense({ ...defaultExpense });
+        }
+        const newExpenseWithId: expense = { ...newExpense, id: data as number };
+        const newExpenses = [...expenses, newExpenseWithId]; 
+        const newTotalCost = totalCost + newExpenseWithId.cost * newExpenseWithId.amount;
+        setExpenses(newExpenses);
+        setNewExpense({ ...defaultExpense });
+        setTotalCost(newTotalCost);
+      })
+      .catch((e) => setSystemErrorMessage(e))
+    })
+    .catch((e) => setSystemErrorMessage(e));
+  }
+
+  function updateExpense() {
+    if (isExpressionInvalid(expenseToEdit)) {
+      setErrorMessage(`The expense you tried to edit is currently invalid. Please ensure all fields are properly filled out before trying again.`);
+      return;
+    }
+
+    fetch(`http://localhost:3000/expenses/${expenseToEdit.id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type" : "application/json"
+      },
+      body: JSON.stringify(expenseToEdit)
+    })
+    .then((response) => {
+      if (!response.ok) {
+        response.json()
+        .then((data : string) => {
+          setSystemErrorMessage(`${response.status} ${data}`);
+          setExpenseToEdit({ ...defaultExpense });
+        })
+        .catch((e) => setSystemErrorMessage(e));
+      }
+
+      const previousExpense = expenses.find((expense) => expense.id === expenseToEdit.id);
+      const updatedExpenses = expenses.map((expense) => expense.id === expenseToEdit.id ? expenseToEdit : expense);
+      //To enusure that the new cost is correct for both addition/subtraction, I'm subtracting the previous amount * previous cost from the total cost and then adding the new cost * new amount
+      const newTotalCost = (totalCost - (previousExpense?.amount ?? 1) * (previousExpense?.cost ?? 0)) + expenseToEdit.cost * expenseToEdit.amount;
+      setExpenses(updatedExpenses);
+      setExpenseToEdit({ ...defaultExpense });
+      setTotalCost(newTotalCost);
+    })
+    .catch((e) => setSystemErrorMessage(e));
+  }
 
   return (
-    <>
+    <div className="expense-tracker-page">
       <h1>Welcome to your Expense Tracker</h1>
       { //If an error message has been set we display it otherwise at the top to let the user know that an error has occured
         errorMessage !== "" 
-        ? <h2 className='errorMessage'>{`Page could not be loaded or updated because an error occured, please try again later. Error: ${errorMessage}`}</h2> 
+        ? <h2 id='errorMessage'>{errorMessage}</h2> 
         : <></> }
       <h2 id="logbook-header">Your Expense Logbook</h2>
+      <span id="criteria-filters">
+        <select></select>
+        <select></select>
+      </span>
       <table id="expenses-table">
         <thead id="expenses-table-header">
           <tr>
@@ -85,79 +169,127 @@ function validateNumberInput(event : React.InputEvent<HTMLInputElement>, propert
           </tr>
         </thead>
         <tbody id="expense-table-body-unique">
-          { expenses.map((expense) => 
-            {return (
+          { expenses.map((expense) => {
+            const isEditing = expense.id === expenseToEdit.id;
+
+            return (
               <tr key={expense.id}>
+                <EditableExpenseCell
+                  isEditing={isEditing}
+                  inputType="text"
+                  value={expenseToEdit.title}
+                  displayValue={expense.title}
+                  onChange={(value) => {
+                    setExpenseToEdit((prev) => ({
+                      ...prev,
+                      title: value as string,
+                    }));
+                  }}
+                />
+                <EditableExpenseCell
+                  isEditing={isEditing}
+                  inputType="select"
+                  value={expenseToEdit.category}
+                  displayValue={expense.category}
+                  options={expenseCategories}
+                  onChange={(value) => {
+                    setExpenseToEdit((prev) => ({
+                      ...prev,
+                      category: value as string,
+                    }));
+                  }}
+                />
+                <EditableExpenseCell
+                  isEditing={isEditing}
+                  inputType="number"
+                  min={1}
+                  value={expenseToEdit.amount}
+                  displayValue={expense.amount}
+                  onChange={(value) => {
+                    setExpenseToEdit((prev) => ({
+                      ...prev,
+                      amount: value as number,
+                    }));
+                  }}
+                />
+                <EditableExpenseCell
+                  isEditing={isEditing}
+                  inputType="number"
+                  min={0}
+                  value={expenseToEdit.cost}
+                  displayValue={`$${expense.cost}`}
+                  onChange={(value) => {
+                    setExpenseToEdit((prev) => ({
+                      ...prev,
+                      cost: value as number,
+                    }));
+                  }}
+                />
+                <EditableExpenseCell
+                  isEditing={isEditing}
+                  inputType="date"
+                  value={expenseToEdit.date}
+                  displayValue={new Date(expense.date).toLocaleDateString()}
+                  onChange={(value) => {
+                    setExpenseToEdit((prev) => ({
+                      ...prev,
+                      date: value as Date,
+                    }));
+                  }}
+                />
+                <EditableExpenseCell
+                  isEditing={isEditing}
+                  inputType="text"
+                  value={expenseToEdit.description}
+                  displayValue={expense.description}
+                  onChange={(value) => {
+                    setExpenseToEdit((prev) => ({
+                      ...prev,
+                      description: value as string,
+                    }));
+                  }}
+                />
                 <td className="expense-table-data">
                   {
-                    expense.id === expenseToEdit 
-                      ? <input /> 
-                      : <span>{expense.title}</span>
-                  }
-                </td>
-                <td className="expense-table-data">
-                  {
-                    expense.id === expenseToEdit 
-                      ? <select>
-                          { expenseCategories.map((category) => {
-                            return (
-                              <option>{category}</option>
-                            )
-                          }) }
-                        </select>
-                      : <span>{expense.category}</span>
-                  }
-                </td>
-                <td className="expense-table-data">
-                  {
-                    expense.id === expenseToEdit 
-                      ? <input /> 
-                      : <span>{expense.amount}</span>
-                  }
-                </td>
-                <td className="expense-table-data">
-                  {
-                    expense.id === expenseToEdit 
-                      ? <input type="number" min="0" onInput={(e) => e.currentTarget.validity.valid || (e.currentTarget.value = "")} />
-                      : <span>${expense.cost}</span>
-                  }
-                </td>
-                <td className="expense-table-data">
-                  {
-                    expense.id === expenseToEdit 
-                      ? <input type="number" min="1" />
-                      : <span>{new Date(expense.date).toLocaleDateString()}</span>
-                  }
-                </td>
-                <td className="expense-table-data">
-                  {
-                    expense.id === expenseToEdit 
-                      ? <input /> 
-                      : <span>{expense.description}</span>
-                  }
-                </td>
-                <td className="expense-table-data">
-                  {
-                    expense.id === expenseToEdit 
-                      ? <span>
-                        <button onClick={() => setExpenseToEdit(-1)}>Cancel</button>
-                        <button >Confirm</button>
-                      </span> 
-                      : <span>
-                        <button onClick={() => markExpenseAsBeingEdited(expense)}>Edit</button>
+                    isEditing
+                      ? 
+                      <span>
+                        <button onClick={() => updateExpense()}>Confirm</button>
+                        <button onClick={() => setExpenseToEdit({ ...defaultExpense })}>Cancel</button>
+                      </span>
+                      : 
+                      <span>
+                        <button onClick={() => setExpenseToEdit({ ...expense, date: new Date(expense.date) })}>Edit</button>
                         <button onClick={() => DeleteExpense(expense)}>Delete</button>
                       </span>
                   }
                 </td>
               </tr>
-            )}) 
-          }
+            )
+          }) }
+          { /* This table row is to add the row that allows users to create new expenses */ }
           <tr id="new">
             <td className="expense-table-data">
-              <input onChange={(event) => newExpense.current.title = event.target.value}/>
+              <input
+                value={newExpense.title}
+                onChange={(e) => {
+                  setNewExpense((prev) => ({
+                    ...prev,
+                    title: e.target.value,
+                  }));
+                }}
+              />
             </td>
             <td className="expense-table-data">
-              <select onChange={(event) => newExpense.current.category = event.target.value}>
+              <select
+                value={newExpense.category}
+                onChange={(e) => {
+                  setNewExpense((prev) => ({
+                    ...prev,
+                    category: e.target.value,
+                  }));
+                }}
+              >
                 { expenseCategories.map((category) => {
                   return (
                     <option key={category}>{category}</option>
@@ -166,16 +298,50 @@ function validateNumberInput(event : React.InputEvent<HTMLInputElement>, propert
               </select>
             </td>
             <td className="expense-table-data">
-              <input type="number" min="0" onChange={(event) => newExpense.current.amount = Number(event.target.value)}/>
+              <input type="number" min="1" 
+                value={newExpense.amount.toString()}
+                onInput={(e) => e.currentTarget.validity.valid || (e.currentTarget.value = "")} 
+                onChange={(e) => {
+                  setNewExpense((prev) => ({
+                    ...prev,
+                    amount: e.target.valueAsNumber,
+                  }));
+                }}
+              />
             </td>
             <td className="expense-table-data">
-              <input type="number" min="0" onChange={(event) => newExpense.current.cost = Number(event.target.value)}/>
+              <input type="number" min="0" 
+                value={newExpense.cost.toString()}
+                onInput={(e) => e.currentTarget.validity.valid || (e.currentTarget.value = "")} 
+                onChange={(e) => {
+                  setNewExpense((prev) => ({
+                    ...prev,
+                    cost: e.target.valueAsNumber,
+                  }));
+                }}
+              />
             </td>
             <td className="expense-table-data">
-              <input type="date" onChange={(event) => newExpense.current.date = new Date(event.target.value)} />
+              <DateInput
+                value={newExpense.date}
+                onChange={(date) => {
+                  setNewExpense((prev) => ({
+                    ...prev,
+                    date,
+                  }));
+                }}
+              />
             </td>
             <td className="expense-table-data">
-              <input onChange={(event) => newExpense.current.description = event.target.value} />
+              <input
+                value={newExpense.description}
+                onChange={(e) => {
+                  setNewExpense((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }));
+                }}
+              />
             </td>
             <td className="expense-table-data">
              <button onClick={addExpense}>Add</button>
@@ -183,8 +349,8 @@ function validateNumberInput(event : React.InputEvent<HTMLInputElement>, propert
         </tr>
         </tbody>
       </table>
-      <p id="total-cost-paragraph"></p>
-    </>
+      <p id="total-cost-paragraph">{`Total Cost: $${totalCost}`}</p>
+    </div>
   )
 }
 

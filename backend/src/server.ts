@@ -19,7 +19,7 @@ fastify.register(fastifypg, {
 });
 
 fastify.get("/expenses", async (_, res) => {
-  const foundExpenses = (await fastify.pg.query<expense>("select * from expenses.expense")).rows;
+  const foundExpenses = (await fastify.pg.query<expense>("select * from expenses.expense order by id")).rows;
   const allExpenses = JSON.stringify(foundExpenses);
 
   res.header("Access-Control-Allow-Origin", "*");
@@ -68,7 +68,7 @@ fastify.post<ExpenseCreationRequest>("/expenses/add", async (req, res) => {
 
   res.header("Access-Control-Allow-Origin", "*");
   res.status(200);
-  res.send(JSON.stringify(result));
+  res.send(JSON.stringify(result?.id));
 });
 
 try {
