@@ -1,8 +1,9 @@
 import Fastify from 'fastify'
 import fastifypg from '@fastify/postgres'
 import dotenv from "dotenv";
-import type { ExpenseCreationRequest, ExpenseIdRequest, ExpenseUpdateRequest } from './types.js';
+import type { ExpenseCreationRequest, ExpenseIdRequest, ExpenseUpdateRequest, ExpenseQueryRequest } from './types.js';
 import type { expense } from '../../common/types.js';
+import { toISO8601Date } from '../../common/helpers.ts'
 
 dotenv.config({ path: "./.env", override: true });
 
@@ -18,8 +19,16 @@ fastify.register(fastifypg, {
   database: process.env.PGDATABASE
 });
 
-fastify.get("/expenses", async (_, res) => {
-  const foundExpenses = (await fastify.pg.query<expense>("select * from expenses.expense order by id")).rows;
+fastify.get<ExpenseQueryRequest>("/expenses", async (req, res) => {
+  let { category, period } = req.query;
+  category = category ?? "";
+
+  // const currentTime = new Date();
+  // const earliestExpenseDate =  toISO8601Date());
+
+  const foundExpenses = (await fastify.pg.query<expense>(`SELECT * FROM expenses.expense 
+                                                         WHERE (category = $1 OR '' = $1)
+                                                         ORDER BY id`, [category])).rows;
   const allExpenses = JSON.stringify(foundExpenses);
 
   res.header("Access-Control-Allow-Origin", "*");

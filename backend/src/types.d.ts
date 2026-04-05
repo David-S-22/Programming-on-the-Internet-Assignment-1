@@ -8,6 +8,13 @@ interface ExpenseIdRequest extends RequestGenericInterface {
   }
 };
 
+interface ExpenseQueryRequest extends RequestGenericInterface {
+  Querystring: {
+    category: string,
+    period: number
+  }
+};
+
 interface ExpenseCreationRequest extends RequestGenericInterface {
   Body: expense 
 };
@@ -16,4 +23,4 @@ interface ExpenseUpdateRequest extends ExpenseIdRequest {
   Body: expense 
 };
 
-export { ExpenseIdRequest, ExpenseCreationRequest, ExpenseUpdateRequest }
+export { ExpenseIdRequest, ExpenseCreationRequest, ExpenseUpdateRequest, ExpenseQueryRequest }
