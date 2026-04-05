@@ -5,7 +5,7 @@ type EditableExpenseCellProps = {
   displayValue: string | number,
   ariaLabel: string,
   inputType: 'text' | 'number' | 'select' | 'date',
-  value: string | number | Date | null,
+  value: string | number | Date,
   min?: number,
   options?: string[],
   onChange: (value: string | number | Date) => void,
