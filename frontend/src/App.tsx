@@ -44,6 +44,13 @@ function App() {
       || expenseToCheck.description === "";
   }
 
+  //This method is being used to remove any expenses that do not meet the currently applied filters by firstly ...
+  function filterExpensesUsingCriteria(expensesToFilter : expense[]) : expense[] {
+    const filteredExpenses = expensesToFilter.filter((expense) => ((categoryFilter === expenseCategories[0] || expense.category === categoryFilter) 
+                              && (periodFilter === periodFilters[0] || (subMonths(new Date(), Number(periodFilter.match(/\d+/)))).getTime() <= new Date(expense.date).getTime())));
+    return filteredExpenses;
+  }
+
   //This effect is used to get all of the expenses currently in the DB and then populate the expense array after the inital render has occured, so we can populate the expense table
   useEffect(() => {
     fetch("http://localhost:3000/expenses")
@@ -127,8 +134,9 @@ function App() {
           setNewExpense({ ...defaultExpense });
         }
         const newExpenseWithId: expense = { ...newExpense, id: data as number };
-        const newExpenses = [...expenses, newExpenseWithId]; 
-        const newTotalCost = totalCost + newExpenseWithId.cost * newExpenseWithId.amount;
+        const newExpenses = filterExpensesUsingCriteria([...expenses, newExpenseWithId]); 
+        let newTotalCost = 0;
+        newExpenses.forEach((expense) => newTotalCost += expense.cost * expense.amount);
         setExpenses(newExpenses);
         setNewExpense({ ...defaultExpense });
         setTotalCost(newTotalCost);
@@ -163,8 +171,7 @@ function App() {
 
       let updatedExpenses = expenses.map((expense) => expense.id === expenseToEdit.id ? expenseToEdit : expense);
       //This filter is being used to remove the newly edited expense incase it's new values causes it to not meet the currently applied filters
-      updatedExpenses = updatedExpenses.filter((expense) => ((categoryFilter === expenseCategories[0] || expense.category === categoryFilter) 
-                              && (periodFilter === periodFilters[0] || (subMonths(new Date(), Number(periodFilter.match(/\d+/)))).getTime() <= new Date(expense.date).getTime())));
+      updatedExpenses = filterExpensesUsingCriteria(updatedExpenses);
       
       let newTotalCost = 0;
       updatedExpenses.forEach((expense) => newTotalCost += expense.cost * expense.amount);
