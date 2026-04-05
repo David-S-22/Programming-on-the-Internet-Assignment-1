@@ -3,9 +3,10 @@ import './App.css'
 import DateInput from './components/DateInput'
 import EditableExpenseCell from './components/EditableExpenseCell'
 import type { expense } from "../../common/types.d.ts"
+import { subMonths } from 'date-fns'
 
 const expenseCategories = ["Select Category", "Travel", "Groceries", "Personal", "Utilities", "Transport"];
-const periodFilters = ["Select Period", 3, 6, 9, 12];
+const periodFilters = ["Select Period", "3 Months", "6 Months", "9 Months", "12 Months"];
 
 const defaultExpense: expense = {
   id: NaN,
@@ -24,7 +25,7 @@ function App() {
   const [newExpense, setNewExpense] = useState<expense>({ ...defaultExpense });
   const [totalCost, setTotalCost] = useState<number>(0);
   const [categoryFilter, setCategoryFilter] = useState<string>(expenseCategories[0]);
-  const [periodFilter, setPeriodFilter] = useState<string | number>(periodFilters[0]);
+  const [periodFilter, setPeriodFilter] = useState<string>(periodFilters[0]);
 
   //This method is used to create the error messages for when the system has come into a problem. As the message for this kind of error should be the same I extracted it out into this helper method to reduce repetition 
   function setSystemErrorMessage(error : Error | string) {
@@ -59,9 +60,28 @@ function App() {
     .catch((e) => setSystemErrorMessage(e));
   }, []);
 
+  //This effect is used to get the filtered expenses based on the selected filters and then populate the expense array with the filtered expenses every time the filters are changed.
   useEffect(() => {
-    console.log(categoryFilter);
-    console.log(periodFilter);
+    let query = "?";
+    if (categoryFilter !== expenseCategories[0]) {
+      query += `category=${categoryFilter}`;
+    }
+    if (periodFilter !== periodFilters[0]) {
+      //The bellow regex is used to extract the number sub-string from the string
+      query += `period=${Number(periodFilter.match(/\d+/))}`;
+    }
+
+    fetch(`http://localhost:3000/expenses${query}`)
+      .then((data) => {
+      data.json()
+        .then((expenses : expense[]) => {
+          let cost = 0;
+          expenses.forEach((expense) => cost += expense.cost * expense.amount);
+          setExpenses(expenses);
+          setTotalCost(cost);
+        })
+    })
+
   }, [categoryFilter, periodFilter]);
 
 
@@ -141,10 +161,13 @@ function App() {
         .catch((e) => setSystemErrorMessage(e));
       }
 
-      const previousExpense = expenses.find((expense) => expense.id === expenseToEdit.id);
-      const updatedExpenses = expenses.map((expense) => expense.id === expenseToEdit.id ? expenseToEdit : expense);
-      //To enusure that the new cost is correct for both addition/subtraction, I'm subtracting the previous amount * previous cost from the total cost and then adding the new cost * new amount
-      const newTotalCost = (totalCost - (previousExpense?.amount ?? 1) * (previousExpense?.cost ?? 0)) + expenseToEdit.cost * expenseToEdit.amount;
+      let updatedExpenses = expenses.map((expense) => expense.id === expenseToEdit.id ? expenseToEdit : expense);
+      //This filter is being used to remove the newly edited expense incase it's new values causes it to not meet the currently applied filters
+      updatedExpenses = updatedExpenses.filter((expense) => ((categoryFilter === expenseCategories[0] || expense.category === categoryFilter) 
+                              && (periodFilter === periodFilters[0] || (subMonths(new Date(), Number(periodFilter.match(/\d+/)))).getTime() <= new Date(expense.date).getTime())));
+      
+      let newTotalCost = 0;
+      updatedExpenses.forEach((expense) => newTotalCost += expense.cost * expense.amount);
       setExpenses(updatedExpenses);
       setExpenseToEdit({ ...defaultExpense });
       setTotalCost(newTotalCost);
@@ -175,7 +198,7 @@ function App() {
         </select >
         <select className="expense-filter-select"
           onChange={(e) => {
-            setPeriodFilter(Number(e.target.value))
+            setPeriodFilter(e.target.value)
           }}>
           {periodFilters.map((period) => {
             return (

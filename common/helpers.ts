@@ -1,4 +1,4 @@
-function toISO8601Date(date: Date): string {
+function toISO8601DateString(date: Date): string {
   if (isNaN(date.getTime())) {
     return "";
   }
@@ -11,4 +11,4 @@ function toISO8601Date(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-export { toISO8601Date }
+export { toISO8601DateString }
