@@ -20,7 +20,7 @@ Life can have many expenses, and it can be increadbly hard to track all of them 
 # Features
 - Dynamic Filtering
 - Responsive Page Design
-- Easy to use and navigate
+- Easy to navigate and use 
 
 # Folder Structure
 In the root I have split my project into 3 seperate folders which are Frontend, Backend and Common. Also in my root I have put any common node packages, so that I was able to use them in both my frontend and backend code without having to install them twice.
