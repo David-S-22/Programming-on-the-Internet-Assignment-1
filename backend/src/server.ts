@@ -3,7 +3,6 @@ import fastifypg from '@fastify/postgres'
 import dotenv from "dotenv";
 import type { ExpenseCreationRequest, ExpenseIdRequest, ExpenseUpdateRequest, ExpenseQueryRequest } from './types.js';
 import type { expense } from '../../common/types.js';
-import { toISO8601DateString } from '../../common/helpers.ts'
 import { format, subMonths } from 'date-fns';
 
 dotenv.config({ path: "./.env", override: true });

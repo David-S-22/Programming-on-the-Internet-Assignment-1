@@ -79,14 +79,14 @@ function App() {
     }
 
     fetch(`http://localhost:3000/expenses${query}`)
-      .then((data) => {
+    .then((data) => {
       data.json()
-        .then((expenses : expense[]) => {
-          let cost = 0;
-          expenses.forEach((expense) => cost += expense.cost * expense.amount);
-          setExpenses(expenses);
-          setTotalCost(cost);
-        })
+      .then((expenses : expense[]) => {
+        let cost = 0;
+        expenses.forEach((expense) => cost += expense.cost * expense.amount);
+        setExpenses(expenses);
+        setTotalCost(cost);
+      })
     })
 
   }, [categoryFilter, periodFilter]);
@@ -120,11 +120,11 @@ function App() {
     }
 
     fetch(`http://localhost:3000/expenses/add`, {
-    method: "POST",
-    headers: {
-      "Content-Type" : "application/json"
-    },
-      body: JSON.stringify(newExpense)
+      method: "POST",
+      headers: {
+        "Content-Type" : "application/json"
+      },
+        body: JSON.stringify(newExpense)
     })
     .then((response) => {
       response.json()
@@ -153,46 +153,47 @@ function App() {
     }
 
     fetch(`http://localhost:3000/expenses/${expenseToEdit.id}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type" : "application/json"
-      },
-      body: JSON.stringify(expenseToEdit)
-    })
-    .then((response) => {
-      if (!response.ok) {
-        response.json()
-        .then((data : string) => {
-          setSystemErrorMessage(`${response.status} ${data}`);
-          setExpenseToEdit({ ...defaultExpense });
-        })
-        .catch((e) => setSystemErrorMessage(e));
-      }
+        method: "PATCH",
+        headers: {
+          "Content-Type" : "application/json"
+        },
+        body: JSON.stringify(expenseToEdit)
+      })
+      .then((response) => {
+        if (!response.ok) {
+          response.json()
+          .then((data : string) => {
+            setSystemErrorMessage(`${response.status} ${data}`);
+            setExpenseToEdit({ ...defaultExpense });
+          })
+          .catch((e) => setSystemErrorMessage(e));
+        }
 
-      let updatedExpenses = expenses.map((expense) => expense.id === expenseToEdit.id ? expenseToEdit : expense);
-      //This filter is being used to remove the newly edited expense incase it's new values causes it to not meet the currently applied filters
-      updatedExpenses = filterExpensesUsingCriteria(updatedExpenses);
-      
-      let newTotalCost = 0;
-      updatedExpenses.forEach((expense) => newTotalCost += expense.cost * expense.amount);
-      setExpenses(updatedExpenses);
-      setExpenseToEdit({ ...defaultExpense });
-      setTotalCost(newTotalCost);
-    })
-    .catch((e) => setSystemErrorMessage(e));
+        let updatedExpenses = expenses.map((expense) => expense.id === expenseToEdit.id ? expenseToEdit : expense);
+        updatedExpenses = filterExpensesUsingCriteria(updatedExpenses);
+        
+        let newTotalCost = 0;
+        updatedExpenses.forEach((expense) => newTotalCost += expense.cost * expense.amount);
+        setExpenses(updatedExpenses);
+        setExpenseToEdit({ ...defaultExpense });
+        setTotalCost(newTotalCost);
+      })
+      .catch((e) => setSystemErrorMessage(e));
   }
 
   return (
-    <div className="expense-tracker-page">
-      <h1>Welcome to your Expense Tracker</h1>
+    <main className="expense-tracker-page" id="expense-logbook" tabIndex={-1} aria-labelledby="page-title">
+      <h1 id="page-title">Welcome to your Expense Tracker</h1>
       { //If an error message has been set we display it otherwise at the top to let the user know that an error has occured
         errorMessage !== "" 
-        ? <h2 id='errorMessage'>{errorMessage}</h2> 
+        ? <p id='errorMessage' role="alert" aria-live="assertive">{errorMessage}</p>
         : <></> }
       <h2 id="logbook-header">Your Expense Logbook</h2>
-      <div className="criteria-filters">
+      <div className="criteria-filters" role="group" aria-labelledby="filter-text">
         <p id="filter-text">Filters:</p>
-        <select className="expense-filter-select"
+        <label className="visually-hidden" htmlFor="category-filter">Filter by category</label>
+        <select id="category-filter" className="expense-filter-select"
+          value={categoryFilter}
           onChange={(e) => {
             setCategoryFilter(e.target.value);
           }}
@@ -203,7 +204,9 @@ function App() {
             )
           })}
         </select >
-        <select className="expense-filter-select"
+        <label className="visually-hidden" htmlFor="period-filter">Filter by period</label>
+        <select id="period-filter" className="expense-filter-select"
+          value={periodFilter}
           onChange={(e) => {
             setPeriodFilter(e.target.value)
           }}>
@@ -229,11 +232,14 @@ function App() {
         <tbody id="expense-table-body-unique">
           { expenses.map((expense) => {
             const isEditing = expense.id === expenseToEdit.id;
+            const expenseDate = new Date(expense.date).toLocaleDateString();
+            const rowContext = `${expense.title} on ${expenseDate}`;
 
             return (
               <tr key={expense.id}>
                 <EditableExpenseCell
                   isEditing={isEditing}
+                  ariaLabel={`Edit title for ${rowContext}`}
                   inputType="text"
                   value={expenseToEdit.title}
                   displayValue={expense.title}
@@ -246,6 +252,7 @@ function App() {
                 />
                 <EditableExpenseCell
                   isEditing={isEditing}
+                  ariaLabel={`Edit category for ${rowContext}`}
                   inputType="select"
                   value={expenseToEdit.category}
                   displayValue={expense.category}
@@ -259,6 +266,7 @@ function App() {
                 />
                 <EditableExpenseCell
                   isEditing={isEditing}
+                  ariaLabel={`Edit amount for ${rowContext}`}
                   inputType="number"
                   min={1}
                   value={expenseToEdit.amount}
@@ -272,6 +280,7 @@ function App() {
                 />
                 <EditableExpenseCell
                   isEditing={isEditing}
+                  ariaLabel={`Edit cost for ${rowContext}`}
                   inputType="number"
                   min={0}
                   value={expenseToEdit.cost}
@@ -285,9 +294,10 @@ function App() {
                 />
                 <EditableExpenseCell
                   isEditing={isEditing}
+                  ariaLabel={`Edit date for ${rowContext}`}
                   inputType="date"
                   value={expenseToEdit.date}
-                  displayValue={new Date(expense.date).toLocaleDateString()}
+                  displayValue={expenseDate}
                   onChange={(value) => {
                     setExpenseToEdit((prev) => ({
                       ...prev,
@@ -297,6 +307,7 @@ function App() {
                 />
                 <EditableExpenseCell
                   isEditing={isEditing}
+                  ariaLabel={`Edit description for ${rowContext}`}
                   inputType="text"
                   value={expenseToEdit.description}
                   displayValue={expense.description}
@@ -312,13 +323,13 @@ function App() {
                     isEditing
                       ? 
                       <span>
-                        <button onClick={() => updateExpense()}>Confirm</button>
-                        <button onClick={() => setExpenseToEdit({ ...defaultExpense })}>Cancel</button>
+                        <button aria-label={`Confirm edits for ${rowContext}`} onClick={() => updateExpense()}>Confirm</button>
+                        <button aria-label={`Cancel edits for ${rowContext}`} onClick={() => setExpenseToEdit({ ...defaultExpense })}>Cancel</button>
                       </span>
                       : 
                       <span>
-                        <button onClick={() => setExpenseToEdit({ ...expense, date: new Date(expense.date) })}>Edit</button>
-                        <button onClick={() => DeleteExpense(expense)}>Delete</button>
+                        <button aria-label={`Edit expense ${rowContext}`} onClick={() => setExpenseToEdit({ ...expense, date: new Date(expense.date) })}>Edit</button>
+                        <button aria-label={`Delete expense ${rowContext}`} onClick={() => DeleteExpense(expense)}>Delete</button>
                       </span>
                   }
                 </td>
@@ -329,6 +340,7 @@ function App() {
           <tr id="new">
             <td className="expense-table-data">
               <input
+                aria-label="New expense title"
                 value={newExpense.title}
                 onChange={(e) => {
                   setNewExpense((prev) => ({
@@ -340,6 +352,7 @@ function App() {
             </td>
             <td className="expense-table-data">
               <select
+                aria-label="New expense category"
                 value={newExpense.category}
                 onChange={(e) => {
                   setNewExpense((prev) => ({
@@ -357,6 +370,7 @@ function App() {
             </td>
             <td className="expense-table-data">
               <input type="number" min="1" 
+                aria-label="New expense amount"
                 value={newExpense.amount.toString()}
                 onInput={(e) => e.currentTarget.validity.valid || (e.currentTarget.value = "")} 
                 onChange={(e) => {
@@ -369,6 +383,7 @@ function App() {
             </td>
             <td className="expense-table-data">
               <input type="number" min="0" 
+                aria-label="New expense cost"
                 value={newExpense.cost.toString()}
                 onInput={(e) => e.currentTarget.validity.valid || (e.currentTarget.value = "")} 
                 onChange={(e) => {
@@ -381,6 +396,7 @@ function App() {
             </td>
             <td className="expense-table-data">
               <DateInput
+                ariaLabel="New expense date"
                 value={newExpense.date}
                 onChange={(date) => {
                   setNewExpense((prev) => ({
@@ -392,6 +408,7 @@ function App() {
             </td>
             <td className="expense-table-data">
               <input
+                aria-label="New expense description"
                 value={newExpense.description}
                 onChange={(e) => {
                   setNewExpense((prev) => ({
@@ -402,13 +419,13 @@ function App() {
               />
             </td>
             <td className="expense-table-data">
-             <button onClick={addExpense}>Add</button>
+             <button aria-label="Add new expense" onClick={addExpense}>Add</button>
             </td>
         </tr>
         </tbody>
       </table>
       <p id="total-cost-paragraph">{`Total Cost: $${totalCost}`}</p>
-    </div>
+    </main>
   )
 }
 

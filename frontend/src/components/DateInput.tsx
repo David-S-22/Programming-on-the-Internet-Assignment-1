@@ -5,9 +5,10 @@ function parseDateInputValue(value: string): Date {
   return value === "" ? new Date(NaN) : new Date(`${value}T00:00:00`);
 }
 
-function DateInput(props : { value: Date, onChange: (date: Date) => void }) {
+function DateInput(props : { value: Date, onChange: (date: Date) => void, ariaLabel?: string }) {
   return (
     <input
+      aria-label={props.ariaLabel}
       type="date"
       value={toISO8601DateString(props.value)}
       onChange={(event) => {

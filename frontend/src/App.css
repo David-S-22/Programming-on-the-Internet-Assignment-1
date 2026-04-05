@@ -29,6 +29,18 @@ p {
 	min-height: 100vh;
 }
 
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
 .expense-tracker-page {
 	width: min(99vw, 2200px);
 	margin: 0 auto;
@@ -51,11 +63,11 @@ h1 {
 	max-width: 900px;
 	margin: 0 auto 14px;
 	padding: 10px 12px;
-	border: 1px solid #efbcc6;
-	border-left: 5px solid #c92a45;
+	border: 1px solid #de6e84;
+	border-left: 5px solid #9c1230;
 	border-radius: 10px;
-	background-color: #fff3f6;
-	color: #8f1026;
+	background-color: #fff1f4;
+	color: #6e0820;
 	font-size: 1rem;
 	font-weight: 600;
 }
@@ -166,8 +178,8 @@ select {
 .expense-table-data input:focus,
 .expense-table-data select:focus {
 	outline: none;
-	border-color: #2563eb;
-	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+	border-color: #0b4bb3;
+	box-shadow: 0 0 0 3px rgba(11, 75, 179, 0.28);
 }
 
 button {
@@ -195,7 +207,7 @@ button:active {
 }
 
 button:focus-visible {
-	outline: 2px solid rgba(47, 111, 217, 0.4);
+	outline: 3px solid #0b4bb3;
 	outline-offset: 2px;
 }
 
@@ -216,16 +228,16 @@ button:focus-visible {
 }
 
 #expenses-table td:nth-child(7) > span button + button {
-	border-color: #c03a4a;
-	background-color: #d74a5d;
+	border-color: #8f1d2d;
+	background-color: #b42338;
 }
 
 #expenses-table td:nth-child(7) > span button + button:hover {
-	background-color: #c73d50;
+	background-color: #9f1f31;
 }
 
 #expenses-table td:nth-child(7) > span button + button:active {
-	background-color: #b63546;
+	background-color: #891a2a;
 }
 
 #total-cost-paragraph {
@@ -258,6 +270,8 @@ button:focus-visible {
 	gap: 10px;
 	margin: 0 0 20px;
 	flex-wrap: wrap;
+	border: none;
+	padding: 0;
 }
 
 #total-cost-paragraph {
@@ -282,8 +296,8 @@ button:focus-visible {
 
 .criteria-filters select:focus {
 	outline: none;
-	border-color: #2563eb;
-	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+	border-color: #0b4bb3;
+	box-shadow: 0 0 0 3px rgba(11, 75, 179, 0.28);
 }
 
 @media (max-width: 700px) {

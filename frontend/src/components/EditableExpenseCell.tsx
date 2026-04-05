@@ -3,6 +3,7 @@ import DateInput from './DateInput'
 type EditableExpenseCellProps = {
   isEditing: boolean,
   displayValue: string | number,
+  ariaLabel: string,
   inputType: 'text' | 'number' | 'select' | 'date',
   value: string | number | Date | null,
   min?: number,
@@ -16,6 +17,7 @@ function EditableExpenseCell(props: EditableExpenseCellProps) {
   if (props.inputType === 'text') {
     editingElement = (
       <input
+        aria-label={props.ariaLabel}
         value={props.value as string}
         onChange={(e) => {
           props.onChange(e.target.value);
@@ -27,6 +29,7 @@ function EditableExpenseCell(props: EditableExpenseCellProps) {
   if (props.inputType === 'select') {
     editingElement = (
       <select
+        aria-label={props.ariaLabel}
         value={props.value as string}
         onChange={(e) => {
           props.onChange(e.target.value);
@@ -44,6 +47,7 @@ function EditableExpenseCell(props: EditableExpenseCellProps) {
   if (props.inputType === 'number') {
     editingElement = (
       <input
+        aria-label={props.ariaLabel}
         type="number"
         min={props.min}
         value={(props.value as number).toString()}
@@ -58,6 +62,7 @@ function EditableExpenseCell(props: EditableExpenseCellProps) {
   if (props.inputType === 'date') {
     editingElement = (
       <DateInput
+        ariaLabel={props.ariaLabel}
         value={props.value as Date}
         onChange={(date) => {
           props.onChange(date);
