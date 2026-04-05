@@ -6,10 +6,12 @@
 # Technical Stack
 ## Frontend
 - React
+- TypeScript
 
 ## Backend
 - Fastify
 - NodeJS
+- TypeScript
 
 ## Database
 - Postgres
