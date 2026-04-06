@@ -1,10 +1,34 @@
-import type { ExpenseCreationRequest, ExpenseIdRequest, ExpenseQueryRequest, ExpenseUpdateRequest } from "./types.d.ts";
 import { format, subMonths } from "date-fns";
 import type { expense } from "../../common/types.d.ts";
-import type { FastifyInstance } from "fastify";
+import type { FastifyBaseLogger, FastifyInstance, RawReplyDefaultExpression, RawRequestDefaultExpression, RawServerDefault } from "fastify";
+import { expenseSchema, type AppTypeProvider } from "./schemas.ts";
 
-export default async function registerRoutes(server : FastifyInstance) {
-  server.get<ExpenseQueryRequest>("/expenses", async (req, res) => {
+
+//This type is used to indicate that the passed in instance uses a JsonSchemaToTS type resolution provider, which allows for the JSON to type resolution occuring in the routes
+type FastifyInstanceWithTypeProvider = FastifyInstance<
+  RawServerDefault,
+  RawRequestDefaultExpression<RawServerDefault>,
+  RawReplyDefaultExpression<RawServerDefault>,
+  FastifyBaseLogger,
+  AppTypeProvider>;
+
+export default async function registerRoutes(server : FastifyInstanceWithTypeProvider) {
+  server.addSchema(expenseSchema)
+
+  server.get("/expenses", {
+    //This is the definition of what we're expecting from requests for this route, ensures backend validation and allows for type resolution
+    schema: {
+      querystring: {
+        type : "object",
+        properties: {
+          category : { type: "string" },
+          period : { type : "integer" }
+        },
+      }
+    },
+  },
+  //This is the logic that will be executed when sending a request via this route
+  async (req, res) => {
     let { category, period } = req.query;
     category = category ?? "";
 
@@ -21,7 +45,18 @@ export default async function registerRoutes(server : FastifyInstance) {
     res.send(JSON.stringify(foundExpenses));
   });
 
-  server.delete<ExpenseIdRequest>("/expenses/:id", async (req, res) => {
+  server.delete("/expenses/:id", {
+    schema: {
+      params: {
+        type : "object",
+        properties : {
+          id : { type : "integer" }
+        },
+        required: ["id"]
+      }
+    }
+  },
+  async (req, res) => {
     const { id } = req.params;
     const result = (await server.pg.query("DELETE from expenses.expense WHERE id = $1", [id])).rowCount;
 
@@ -34,39 +69,51 @@ export default async function registerRoutes(server : FastifyInstance) {
     res.status(200);
   });
 
-  server.register(registerExpenseBodyRoutes);
+  server.patch("/expenses/:id", {
+    schema: {
+      params: {
+        type : "object",
+        properties : {
+          id : { type : "integer" }
+        },
+        required : ["id"],
+      },
+      body: { $ref : "expenseSchema#" }
+    }
+  },
+  async (req, res) => {
+    const { id } = req.params;
+    const { title, category, amount, cost, date, description } = req.body;
+    const result = (await server.pg.query(`UPDATE expenses.expense 
+                                           SET title=$1, category=$2, amount=$3, cost=$4, date=$5, description=$6 
+                                           WHERE id = $7;`, 
+                                             [title, category, amount, cost, date, description, id]))
+                                           .rowCount;
+    if (result === 0) {
+      res.status(404);
+      res.send("Failed to update expense as it does not exist.");
+    }
 
-  async function registerExpenseBodyRoutes(server : FastifyInstance) {
-    server.patch<ExpenseUpdateRequest>("/expenses/:id", async (req, res) => {
-      const { id } = req.params;
-      const { title, category, amount, cost, date, description } = req.body;
-      const result = (await server.pg.query(`UPDATE expenses.expense 
-                                             SET title=$1, category=$2, amount=$3, cost=$4, date=$5, description=$6 
-                                             WHERE id = $7;`, 
-                                               [title, category, amount, cost, date, description, id]))
-                                             .rowCount;
-      if (result === 0) {
-        res.status(404);
-        res.send("Failed to update expense as it does not exist.");
-      }
+    res.header("Access-Control-Allow-Origin", "*");
+    res.status(200);
+  });
 
-      res.header("Access-Control-Allow-Origin", "*");
-      res.status(200);
-    });
+  server.post("/expenses/add", {
+    schema: {
+      body: { $ref : "expenseSchema#" }
+    }
+  },
+  async (req, res) => {
+    const { title, category, amount, cost, date, description } = req.body;
 
-    server.post<ExpenseCreationRequest>("/expenses/add", async (req, res) => {
-      const { title, category, amount, cost, date, description } = req.body;
+    const result = (await server.pg.query<expense>(`INSERT INTO expenses.expense(
+                            title, category, amount, cost, date, description)
+                            VALUES ($1, $2, $3, $4, $5, $6)
+                            RETURNING id;`,
+                              [title, category, amount, cost, date, description])).rows[0];
 
-      const result = (await server.pg.query<expense>(`INSERT INTO expenses.expense(
-                              title, category, amount, cost, date, description)
-                              VALUES ($1, $2, $3, $4, $5, $6)
-                              RETURNING id;`,
-                                [title, category, amount, cost, date, description])).rows[0];
-
-      res.header("Access-Control-Allow-Origin", "*");
-      res.status(200);
-      res.send(JSON.stringify(result?.id));
-    });
-  }
+    res.header("Access-Control-Allow-Origin", "*");
+    res.status(200);
+    res.send(JSON.stringify(result?.id));
+  });
 }
-
