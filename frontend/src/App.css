@@ -3,6 +3,11 @@
 	line-height: 1.4;
 	font-weight: 400;
 	color: #151a26;
+	--table-control-height: 30px;
+	--table-control-padding: 5px 8px;
+	--table-font-size: 1rem;
+	--action-button-height: 33px;
+	--add-button-min-width: 92px;
 	font-synthesis: none;
 	text-rendering: optimizeLegibility;
 	-webkit-font-smoothing: antialiased;
@@ -14,31 +19,7 @@
 }
 
 body {
-	margin: 0;
 	min-height: 100vh;
-	background: linear-gradient(180deg, #fafaf8 0%, #f2f4fb 100%);
-}
-
-h1,
-h2,
-p {
-	margin-top: 0;
-}
-
-#root {
-	min-height: 100vh;
-}
-
-.visually-hidden {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	padding: 0;
-	margin: -1px;
-	overflow: hidden;
-	clip: rect(0, 0, 0, 0);
-	white-space: nowrap;
-	border: 0;
 }
 
 .expense-tracker-page {
@@ -59,17 +40,51 @@ h1 {
 	text-align: center;
 }
 
-#errorMessage {
+.error-message-banner {
 	max-width: 900px;
 	margin: 0 auto 14px;
 	padding: 10px 12px;
 	border: 1px solid #de6e84;
-	border-left: 5px solid #9c1230;
 	border-radius: 10px;
 	background-color: #fff1f4;
 	color: #6e0820;
 	font-size: 1rem;
 	font-weight: 600;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+#errorMessage {
+	margin: 0;
+	flex: 1;
+	min-width: 0;
+}
+
+.error-message-banner button {
+	flex: 0 0 auto;
+	min-height: 28px;
+	min-width: 28px;
+	padding: 0;
+	margin-left: auto;
+	border-radius: 999px;
+	color: #6e0820;
+	background-color: transparent;
+	border-color: transparent;
+	box-shadow: none;
+}
+
+.error-message-banner button:hover {
+	background-color: rgba(156, 18, 48, 0.08);
+	border-color: transparent;
+}
+
+.error-message-banner button:active {
+	background-color: rgba(156, 18, 48, 0.14);
+}
+
+.error-message-banner button:focus-visible {
+	outline-color: #9c1230;
 }
 
 #expenses-table {
@@ -134,13 +149,16 @@ h1 {
 	padding: 10px;
 	background-color: #f4f7fc;
 	color: #1b2d4f;
+	font-size: var(--table-font-size);
 	font-weight: 600;
 	text-align: center;
 }
 
 .expense-table-data {
 	padding: 8px 10px;
-	height: 50px;
+	min-height: 46px;
+	height: auto;
+	font-size: var(--table-font-size);
 	text-align: center;
 	vertical-align: middle;
 }
@@ -153,18 +171,23 @@ h1 {
 #expenses-table tbody tr:hover td {
 	background-color: #f8fbff;
 }
-.expense-table-data select {
-  width: 100%;
-  min-height: 35px;
-}
+
+.expense-table-data select,
 .expense-table-data input {
 	width: 100%;
-	min-height: 35px;
-	padding: 6px 8px;
+	max-width: 100%;
+	min-width: 0;
+	min-height: var(--table-control-height);
+	padding: var(--table-control-padding);
+	font-size: inherit;
+	font-family: inherit;
+}
+
+.expense-table-data input {
 	border: 1px solid #bfd0e3;
 	border-radius: 8px;
 	background-color: #ffffff;
-	font: inherit;
+	font-family: inherit;
 }
 
 select {
@@ -212,19 +235,32 @@ button:focus-visible {
 }
 
 #expenses-table td:nth-child(7) > span {
-	display: flex;
-	flex-wrap: nowrap;
-	justify-content: center;
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 8px;
+	width: 100%;
+	max-width: 260px;
+	margin: 0 auto;
 }
 
 #expenses-table td:nth-child(7) > span button {
-	flex: 0 0 auto;
-	min-width: 112px;
+	min-width: 0;
+	min-height: var(--action-button-height);
+	width: 100%;
+	padding: 6px 10px;
+	font-size: inherit;
+	font-family: inherit;
 }
 
 #new td:nth-child(7) > button {
-	min-width: 112px;
+	min-width: var(--add-button-min-width);
+	min-height: var(--action-button-height);
+	width: 82%;
+	max-width: 220px;
+	margin: 0 auto;
+	padding: 6px 10px;
+	font-size: inherit;
+	font-family: inherit;
 }
 
 #expenses-table td:nth-child(7) > span button + button {
@@ -246,20 +282,72 @@ button:focus-visible {
 	text-align: left;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1600px) {
+	:root {
+		--table-control-height: 30px;
+		--table-control-padding: 4px 7px;
+		--table-font-size: 0.95rem;
+		--action-button-height: 31px;
+		--add-button-min-width: 88px;
+	}
+
 	.expense-tracker-page {
 		width: 99vw;
 		padding: 20px 8px 30px;
 	}
 
-	#expenses-table td:nth-child(7) > span {
-		gap: 6px;
+	#expenses-table {
+		min-width: 860px;
 	}
 
-	#expenses-table td:nth-child(7) > span button {
-		min-width: 100px;
-		padding: 6px 10px;
-		font-size: 0.8rem;
+	.expense-table-data {
+		padding: 7px 8px;
+	}
+
+	#expenses-table td:nth-child(7) > span {
+		gap: 6px;
+		max-width: 230px;
+		margin: 0 auto;
+	}
+
+	#new .expense-table-data input,
+	#new .expense-table-data select {
+		width: 100%;
+		max-width: 100%;
+	}
+
+	#new td:nth-child(7) > button {
+		max-width: 200px;
+	}
+}
+
+@media (max-width: 980px) {
+	:root {
+		--table-control-height: 28px;
+		--table-control-padding: 4px 6px;
+		--table-font-size: 0.9rem;
+		--action-button-height: 29px;
+		--add-button-min-width: 80px;
+	}
+
+	#expenses-table {
+		min-width: 700px;
+	}
+
+	#expenses-table td:nth-child(7) > span {
+		max-width: 170px;
+		grid-template-columns: 1fr;
+	}
+
+	#new .expense-table-data input,
+	#new .expense-table-data select {
+		width: 100%;
+		max-width: 100%;
+	}
+
+	#new td:nth-child(7) > button {
+		width: 90%;
+		max-width: 160px;
 	}
 }
 

@@ -27,3 +27,4 @@ frontend/*.sln
 frontend/*.sw?
 
 node_modules/
+.vscode

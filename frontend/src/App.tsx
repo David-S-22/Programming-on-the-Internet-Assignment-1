@@ -4,6 +4,7 @@ import DateInput from './components/DateInput'
 import EditableExpenseCell from './components/EditableExpenseCell'
 import type { expense } from "../../common/types.d.ts"
 import { subMonths } from 'date-fns'
+import { XIcon } from 'lucide-react'
 
 const expenseCategories = ["Select Category", "Travel", "Groceries", "Personal", "Utilities", "Transport"];
 const periodFilters = ["Select Period", "3 Months", "6 Months", "9 Months", "12 Months"];
@@ -51,23 +52,8 @@ function App() {
     return filteredExpenses;
   }
 
-  //This effect is used to get all of the expenses currently in the DB and then populate the expense array after the inital render has occured, so we can populate the expense table
-  useEffect(() => {
-    fetch("http://localhost:3000/expenses")
-    .then((data) => {
-      data.json()
-        .then((expenses: expense[]) => {
-          let cost = 0;
-          expenses.forEach((expense) => cost += expense.cost * expense.amount);
-          setExpenses(expenses);
-          setTotalCost(cost);
-        })
-        .catch((e) => setSystemErrorMessage(e));
-    })
-    .catch((e) => setSystemErrorMessage(e));
-  }, []);
-
   //This effect is used to get the filtered expenses based on the selected filters and then populate the expense array with the filtered expenses every time the filters are changed.
+  //Also this is used to populate the tables initally as it will run after the inital render, allowing us to initally populate the table.
   useEffect(() => {
     let query = "?";
     if (categoryFilter !== expenseCategories[0]) {
@@ -186,12 +172,14 @@ function App() {
       <h1 id="page-title">Welcome to your Expense Tracker</h1>
       { //If an error message has been set we display it otherwise at the top to let the user know that an error has occured
         errorMessage !== "" 
-        ? <p id='errorMessage' role="alert" aria-live="assertive">{errorMessage}</p>
+        ? <div className="error-message-banner" role="alert" aria-live="assertive">
+            <p id="errorMessage">{errorMessage}</p>
+            <button aria-label="Dismiss error message" onClick={() => (setErrorMessage(""))}><XIcon size={16}/></button>
+        </div>
         : <></> }
       <h2 id="logbook-header">Your Expense Logbook</h2>
       <div className="criteria-filters" role="group" aria-labelledby="filter-text">
         <p id="filter-text">Filters:</p>
-        <label className="visually-hidden" htmlFor="category-filter">Filter by category</label>
         <select id="category-filter" className="expense-filter-select"
           value={categoryFilter}
           onChange={(e) => {
@@ -204,7 +192,6 @@ function App() {
             )
           })}
         </select >
-        <label className="visually-hidden" htmlFor="period-filter">Filter by period</label>
         <select id="period-filter" className="expense-filter-select"
           value={periodFilter}
           onChange={(e) => {

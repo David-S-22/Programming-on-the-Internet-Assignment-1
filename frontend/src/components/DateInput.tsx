@@ -1,8 +1,7 @@
-import { toISO8601DateString } from "../../../common/helpers.ts"
+import { format } from "date-fns";
 
-function parseDateInputValue(value: string): Date {
-  //The reason why we add the timestamp is to ensure that we don't try to set it in UTC time which can cause a mismatch in inputted and the actually set date.
-  return value === "" ? new Date(NaN) : new Date(`${value}T00:00:00`);
+function getDateFromTargetValue(value: Date | null): Date {
+  return value ?? new Date(NaN);
 }
 
 function DateInput(props : { value: Date, onChange: (date: Date) => void, ariaLabel?: string }) {
@@ -10,9 +9,9 @@ function DateInput(props : { value: Date, onChange: (date: Date) => void, ariaLa
     <input
       aria-label={props.ariaLabel}
       type="date"
-      value={toISO8601DateString(props.value)}
+      value={format(props.value, "yyyy-MM-dd")}
       onChange={(event) => {
-        props.onChange(parseDateInputValue(event.target.value));
+        props.onChange(getDateFromTargetValue(event.target.valueAsDate));
       }}
     />
   );

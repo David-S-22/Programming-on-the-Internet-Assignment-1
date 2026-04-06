@@ -89,6 +89,7 @@ export default async function registerRoutes(server : FastifyInstanceWithTypePro
                                            WHERE id = $7;`, 
                                              [title, category, amount, cost, date, description, id]))
                                            .rowCount;
+
     if (result === 0) {
       res.status(404);
       res.send("Failed to update expense as it does not exist.");
@@ -105,7 +106,6 @@ export default async function registerRoutes(server : FastifyInstanceWithTypePro
   },
   async (req, res) => {
     const { title, category, amount, cost, date, description } = req.body;
-
     const result = (await server.pg.query<expense>(`INSERT INTO expenses.expense(
                             title, category, amount, cost, date, description)
                             VALUES ($1, $2, $3, $4, $5, $6)
