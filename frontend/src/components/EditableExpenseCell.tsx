@@ -7,6 +7,7 @@ type EditableExpenseCellProps = {
   inputType: 'text' | 'number' | 'select' | 'date',
   value: string | number | Date,
   min?: number,
+  step? : number,
   options?: string[],
   onChange: (value: string | number | Date) => void,
 }
@@ -51,6 +52,7 @@ function EditableExpenseCell(props: EditableExpenseCellProps) {
         type="number"
         min={props.min}
         value={(props.value as number).toString()}
+        step={props.step}
         onInput={(e) => e.currentTarget.validity.valid || (e.currentTarget.value = '')}
         onChange={(e) => {
           props.onChange(e.target.valueAsNumber);

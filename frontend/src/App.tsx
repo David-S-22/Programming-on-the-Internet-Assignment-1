@@ -258,6 +258,7 @@ function App() {
                   min={1}
                   value={expenseToEdit.amount}
                   displayValue={expense.amount}
+                  step={1}
                   onChange={(value) => {
                     setExpenseToEdit((prev) => ({
                       ...prev,
@@ -272,6 +273,7 @@ function App() {
                   min={0}
                   value={expenseToEdit.cost}
                   displayValue={`$${expense.cost}`}
+                  step={0.01}
                   onChange={(value) => {
                     setExpenseToEdit((prev) => ({
                       ...prev,

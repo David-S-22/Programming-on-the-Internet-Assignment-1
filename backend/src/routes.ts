@@ -3,8 +3,7 @@ import type { expense } from "../../common/types.d.ts";
 import type { FastifyBaseLogger, FastifyInstance, RawReplyDefaultExpression, RawRequestDefaultExpression, RawServerDefault } from "fastify";
 import { expenseSchema, type AppTypeProvider } from "./schemas.ts";
 
-
-//This type is used to indicate that the passed in instance uses a JsonSchemaToTS type resolution provider, which allows for the JSON to type resolution occuring in the routes
+//This type is used to indicate that the passed in instance uses a custom JsonSchemaToTS type resolution provider, which allows for the JSON to type resolution and
 type FastifyInstanceWithTypeProvider = FastifyInstance<
   RawServerDefault,
   RawRequestDefaultExpression<RawServerDefault>,
@@ -40,7 +39,6 @@ export default async function registerRoutes(server : FastifyInstanceWithTypePro
                                                            WHERE (category = $1 OR '' = $1) AND (date >= $2)
                                                            ORDER BY id`, [category, earliestExpenseDate])).rows;
 
-    res.header("Access-Control-Allow-Origin", "*");
     res.status(200);
     res.send(JSON.stringify(foundExpenses));
   });
@@ -65,7 +63,6 @@ export default async function registerRoutes(server : FastifyInstanceWithTypePro
       res.send("Failed to delete expense as it does not exist.");
     }
 
-    res.header("Access-Control-Allow-Origin", "*");
     res.status(200);
   });
 
@@ -95,7 +92,6 @@ export default async function registerRoutes(server : FastifyInstanceWithTypePro
       res.send("Failed to update expense as it does not exist.");
     }
 
-    res.header("Access-Control-Allow-Origin", "*");
     res.status(200);
   });
 
@@ -112,7 +108,6 @@ export default async function registerRoutes(server : FastifyInstanceWithTypePro
                             RETURNING id;`,
                               [title, category, amount, cost, date, description])).rows[0];
 
-    res.header("Access-Control-Allow-Origin", "*");
     res.status(200);
     res.send(JSON.stringify(result?.id));
   });
