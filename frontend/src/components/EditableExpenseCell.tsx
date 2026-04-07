@@ -4,6 +4,7 @@ type EditableExpenseCellProps = {
   isEditing: boolean,
   displayValue: string | number,
   ariaLabel: string,
+  title?: string,
   inputType: 'text' | 'number' | 'select' | 'date',
   value: string | number | Date,
   min?: number,
@@ -19,6 +20,7 @@ function EditableExpenseCell(props: EditableExpenseCellProps) {
     editingElement = (
       <input
         aria-label={props.ariaLabel}
+        title={props.title}
         value={props.value as string}
         onChange={(e) => {
           props.onChange(e.target.value);
@@ -31,6 +33,7 @@ function EditableExpenseCell(props: EditableExpenseCellProps) {
     editingElement = (
       <select
         aria-label={props.ariaLabel}
+        title={props.title}
         value={props.value as string}
         onChange={(e) => {
           props.onChange(e.target.value);
@@ -53,9 +56,9 @@ function EditableExpenseCell(props: EditableExpenseCellProps) {
         min={props.min}
         value={(props.value as number).toString()}
         step={props.step}
-        onInput={(e) => e.currentTarget.validity.valid || (e.currentTarget.value = '')}
+        title={props.title}
         onChange={(e) => {
-          props.onChange(e.target.valueAsNumber);
+          props.onChange(e.target.value === '' ? NaN : Number(e.target.value));
         }}
       />
     );
@@ -65,6 +68,7 @@ function EditableExpenseCell(props: EditableExpenseCellProps) {
     editingElement = (
       <DateInput
         ariaLabel={props.ariaLabel}
+        title={props.title}
         value={props.value as Date}
         onChange={(date) => {
           props.onChange(date);

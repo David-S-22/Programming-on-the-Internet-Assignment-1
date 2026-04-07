@@ -6,8 +6,8 @@ import type { expense } from "../../common/types.d.ts"
 import { subMonths } from 'date-fns'
 import { XIcon } from 'lucide-react'
 
-const expenseCategories = ["Select Category", "Travel", "Groceries", "Personal", "Utilities", "Transport"];
-const periodFilters = ["Select Period", "3 Months", "6 Months", "9 Months", "12 Months"];
+const expenseCategories = ["No Category", "Travel", "Groceries", "Personal", "Utilities", "Transport"];
+const periodFilters = ["No Period", "3 Months", "6 Months", "9 Months", "12 Months"];
 
 const defaultExpense: expense = {
   id: NaN,
@@ -24,6 +24,7 @@ function App() {
   const [expenseToEdit, setExpenseToEdit] = useState<expense>({ ...defaultExpense });
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [newExpense, setNewExpense] = useState<expense>({ ...defaultExpense });
+  const [newExpenseNumberInputsKey, setNewExpenseNumberInputsKey] = useState<number>(0);
   const [totalCost, setTotalCost] = useState<number>(0);
   const [categoryFilter, setCategoryFilter] = useState<string>(expenseCategories[0]);
   const [periodFilter, setPeriodFilter] = useState<string>(periodFilters[0]);
@@ -40,7 +41,11 @@ function App() {
       || expenseToCheck.category === "" 
       || expenseToCheck.category === expenseCategories[0]
       || isNaN(expenseToCheck.cost) 
+      || !Number.isFinite(expenseToCheck.cost)
       || isNaN(expenseToCheck.amount) 
+      || !Number.isFinite(expenseToCheck.amount)
+      || expenseToCheck.amount < 1
+      || expenseToCheck.cost < 0
       || isNaN(expenseToCheck.date.getTime()) //The reason why we check if the gotten time is NaN is because there's no way to my knowledge and research to determine if a date is valid outside of a method like this
       || expenseToCheck.description === "";
   }
@@ -125,6 +130,7 @@ function App() {
         newExpenses.forEach((expense) => newTotalCost += expense.cost * expense.amount);
         setExpenses(newExpenses);
         setNewExpense({ ...defaultExpense });
+        setNewExpenseNumberInputsKey((previousKey) => previousKey + 1);
         setTotalCost(newTotalCost);
       })
       .catch((e) => setSystemErrorMessage(e))
@@ -227,6 +233,7 @@ function App() {
                 <EditableExpenseCell
                   isEditing={isEditing}
                   ariaLabel={`Edit title for ${rowContext}`}
+                  title="Enter a clear expense title."
                   inputType="text"
                   value={expenseToEdit.title}
                   displayValue={expense.title}
@@ -240,6 +247,7 @@ function App() {
                 <EditableExpenseCell
                   isEditing={isEditing}
                   ariaLabel={`Edit category for ${rowContext}`}
+                  title="Choose the most accurate category."
                   inputType="select"
                   value={expenseToEdit.category}
                   displayValue={expense.category}
@@ -254,6 +262,7 @@ function App() {
                 <EditableExpenseCell
                   isEditing={isEditing}
                   ariaLabel={`Edit amount for ${rowContext}`}
+                  title="Enter a whole number greater than or equal to 1."
                   inputType="number"
                   min={1}
                   value={expenseToEdit.amount}
@@ -269,11 +278,12 @@ function App() {
                 <EditableExpenseCell
                   isEditing={isEditing}
                   ariaLabel={`Edit cost for ${rowContext}`}
+                  title="Use up to 2 decimal places, for example 12.03."
                   inputType="number"
                   min={0}
                   value={expenseToEdit.cost}
                   displayValue={`$${expense.cost}`}
-                  step={0.01}
+                  step={.01}
                   onChange={(value) => {
                     setExpenseToEdit((prev) => ({
                       ...prev,
@@ -284,6 +294,7 @@ function App() {
                 <EditableExpenseCell
                   isEditing={isEditing}
                   ariaLabel={`Edit date for ${rowContext}`}
+                  title="Select the date for this expense."
                   inputType="date"
                   value={expenseToEdit.date}
                   displayValue={expenseDate}
@@ -297,6 +308,7 @@ function App() {
                 <EditableExpenseCell
                   isEditing={isEditing}
                   ariaLabel={`Edit description for ${rowContext}`}
+                  title="Add a short description about this expense."
                   inputType="text"
                   value={expenseToEdit.description}
                   displayValue={expense.description}
@@ -358,27 +370,38 @@ function App() {
               </select>
             </td>
             <td className="expense-table-data">
-              <input type="number" min="1" 
+              <input
+                key={`new-expense-amount-${newExpenseNumberInputsKey}`}
+                type="number"
+                min="1"
                 aria-label="New expense amount"
-                value={newExpense.amount.toString()}
-                onInput={(e) => e.currentTarget.validity.valid || (e.currentTarget.value = "")} 
+                defaultValue=""
+                inputMode="numeric"
+                placeholder="e.g. 2"
+                title="Enter a whole number greater than or equal to 1."
                 onChange={(e) => {
                   setNewExpense((prev) => ({
                     ...prev,
-                    amount: e.target.valueAsNumber,
+                    amount: e.target.value === '' ? NaN : Number(e.target.value),
                   }));
                 }}
               />
             </td>
             <td className="expense-table-data">
-              <input type="number" min="0" 
+              <input
+                key={`new-expense-cost-${newExpenseNumberInputsKey}`}
+                type="number"
+                min="0"
                 aria-label="New expense cost"
-                value={newExpense.cost.toString()}
-                onInput={(e) => e.currentTarget.validity.valid || (e.currentTarget.value = "")} 
+                step={.01}
+                defaultValue=""
+                inputMode="decimal"
+                placeholder="e.g. 12.03"
+                title="Use up to 2 decimal places, for example 12.03."
                 onChange={(e) => {
                   setNewExpense((prev) => ({
                     ...prev,
-                    cost: e.target.valueAsNumber,
+                    cost: e.target.value === '' ? NaN : Number(e.target.value),
                   }));
                 }}
               />
