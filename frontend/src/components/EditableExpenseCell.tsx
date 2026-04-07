@@ -13,6 +13,7 @@ type EditableExpenseCellProps = {
   onChange: (value: string | number | Date) => void,
 }
 
+//The main purpose of this component is to remove a lot of the repeated code since pretty much all of the expense cells in an existing expense row are the same with little variation. So this component was made to remove the need to define the same thing over and over again, and to also improve maintainability
 function EditableExpenseCell(props: EditableExpenseCellProps) {
   let editingElement;
 
@@ -58,7 +59,7 @@ function EditableExpenseCell(props: EditableExpenseCellProps) {
         step={props.step}
         title={props.title}
         onChange={(e) => {
-          props.onChange(e.target.value === '' ? NaN : Number(e.target.value));
+          props.onChange(e.target.valueAsNumber);
         }}
       />
     );

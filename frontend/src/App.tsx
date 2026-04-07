@@ -9,6 +9,7 @@ import { XIcon } from 'lucide-react'
 const expenseCategories = ["No Category", "Travel", "Groceries", "Personal", "Utilities", "Transport"];
 const periodFilters = ["No Period", "3 Months", "6 Months", "9 Months", "12 Months"];
 
+//This object is being used to allow us to set a default expense (an expense object with all of it's properties set to empty) everytime we need to clear a state of type expense
 const defaultExpense: expense = {
   id: NaN,
   title: "",
@@ -36,25 +37,30 @@ function App() {
     setErrorMessage(message);
   }
 
-  function isExpressionInvalid(expenseToCheck : expense) : boolean {
+  function isExpenseInvalid(expenseToCheck : expense) : boolean {
     return expenseToCheck.title === "" 
       || expenseToCheck.category === "" 
       || expenseToCheck.category === expenseCategories[0]
-      || isNaN(expenseToCheck.cost) 
       || !Number.isFinite(expenseToCheck.cost)
-      || isNaN(expenseToCheck.amount) 
-      || !Number.isFinite(expenseToCheck.amount)
+      || !Number.isInteger(expenseToCheck.amount) //validating to ensure that amount is a whole number
       || expenseToCheck.amount < 1
       || expenseToCheck.cost < 0
       || isNaN(expenseToCheck.date.getTime()) //The reason why we check if the gotten time is NaN is because there's no way to my knowledge and research to determine if a date is valid outside of a method like this
       || expenseToCheck.description === "";
   }
 
-  //This method is being used to remove any expenses that do not meet the currently applied filters by firstly ...
+  //This method is being used to remove any expenses that do not meet the currently applied filters by removing all the expenses whose category aren't of the current category (if there is one) and have a expense time less than the specified period time (if there is one)
   function filterExpensesUsingCriteria(expensesToFilter : expense[]) : expense[] {
     const filteredExpenses = expensesToFilter.filter((expense) => ((categoryFilter === expenseCategories[0] || expense.category === categoryFilter) 
                               && (periodFilter === periodFilters[0] || (subMonths(new Date(), Number(periodFilter.match(/\d+/)))).getTime() <= new Date(expense.date).getTime())));
     return filteredExpenses;
+  }
+
+  //A helper function to help me reduce the need to repeat this logic for updating and adding a expense
+  function calculateAndSetTotalCost(expenses : expense[]) {
+    let newTotalCost = 0;
+    expenses.forEach((expense) => newTotalCost += expense.cost * expense.amount);
+    setTotalCost(newTotalCost);
   }
 
   //This effect is used to get the filtered expenses based on the selected filters and then populate the expense array with the filtered expenses every time the filters are changed.
@@ -65,7 +71,7 @@ function App() {
       query += `category=${categoryFilter}`;
     }
     if (periodFilter !== periodFilters[0]) {
-      //The bellow regex is used to extract the number sub-string from the string
+      //The bellow regex is used to extract the number sub-string from the string and then transforming it into a number
       query += `period=${Number(periodFilter.match(/\d+/))}`;
     }
 
@@ -106,7 +112,8 @@ function App() {
   }
 
   function addExpense() {
-    if (isExpressionInvalid(newExpense)) {
+    //Checking to ensure expense is valid before we try and add it
+    if (isExpenseInvalid(newExpense)) {
       setErrorMessage("The expense you tried to add is incorrect. Please ensure all fields are filled out properly before you try again.");
       return;
     }
@@ -125,14 +132,13 @@ function App() {
           setErrorMessage(data as string);
           setNewExpense({ ...defaultExpense });
         }
+        //Setting the id so that we can use it as the enumeration key and also so that we can delete or modify the newly created expense straight away.
         const newExpenseWithId: expense = { ...newExpense, id: data as number };
         const newExpenses = filterExpensesUsingCriteria([...expenses, newExpenseWithId]); 
-        let newTotalCost = 0;
-        newExpenses.forEach((expense) => newTotalCost += expense.cost * expense.amount);
         setExpenses(newExpenses);
         setNewExpense({ ...defaultExpense });
         setNewExpenseNumberInputsKey((previousKey) => previousKey + 1);
-        setTotalCost(newTotalCost);
+        calculateAndSetTotalCost(newExpenses);
       })
       .catch((e) => setSystemErrorMessage(e))
     })
@@ -140,7 +146,8 @@ function App() {
   }
 
   function updateExpense() {
-    if (isExpressionInvalid(expenseToEdit)) {
+    //Ensuring that the expense is in a valid state before we try to update it
+    if (isExpenseInvalid(expenseToEdit)) {
       setErrorMessage(`The expense you tried to edit is currently invalid. Please ensure all fields are properly filled out before trying again.`);
       return;
     }
@@ -165,11 +172,9 @@ function App() {
         let updatedExpenses = expenses.map((expense) => expense.id === expenseToEdit.id ? expenseToEdit : expense);
         updatedExpenses = filterExpensesUsingCriteria(updatedExpenses);
         
-        let newTotalCost = 0;
-        updatedExpenses.forEach((expense) => newTotalCost += expense.cost * expense.amount);
         setExpenses(updatedExpenses);
         setExpenseToEdit({ ...defaultExpense });
-        setTotalCost(newTotalCost);
+        calculateAndSetTotalCost(updatedExpenses);
       })
       .catch((e) => setSystemErrorMessage(e));
   }
@@ -223,7 +228,8 @@ function App() {
             <th scope="col" className="expense-table-header">Actions</th>
           </tr>
         </thead>
-        <tbody id="expense-table-body-unique">
+        <tbody>
+          { /* This block of code is adding each expense row into the table so that we can display them all */ }
           { expenses.map((expense) => {
             const isEditing = expense.id === expenseToEdit.id;
             const expenseDate = new Date(expense.date).toLocaleDateString();
@@ -284,7 +290,7 @@ function App() {
                   min={0}
                   value={expenseToEdit.cost}
                   displayValue={`$${expense.cost}`}
-                  step={.01}
+                  step={.01 /* This is to ensure that users can increment by 0.1 without having to type*/}
                   onChange={(value) => {
                     setExpenseToEdit((prev) => ({
                       ...prev,
@@ -338,7 +344,7 @@ function App() {
               </tr>
             )
           }) }
-          { /* This table row is to add the row that allows users to create new expenses */ }
+          { /* This table row is to add the row that allows users to create a new expense */ }
           <tr id="new">
             <td className="expense-table-data">
               <input
@@ -383,7 +389,7 @@ function App() {
                 onChange={(e) => {
                   setNewExpense((prev) => ({
                     ...prev,
-                    amount: e.target.value === '' ? NaN : Number(e.target.value),
+                    amount: e.target.valueAsNumber,
                   }));
                 }}
               />
@@ -396,13 +402,12 @@ function App() {
                 aria-label="New expense cost"
                 step={.01}
                 defaultValue=""
-                inputMode="decimal"
                 placeholder="e.g. 12.03"
                 title="Use up to 2 decimal places, for example 12.03."
                 onChange={(e) => {
                   setNewExpense((prev) => ({
                     ...prev,
-                    cost: e.target.value === '' ? NaN : Number(e.target.value),
+                    cost: e.target.valueAsNumber,
                   }));
                 }}
               />
