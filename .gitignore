@@ -28,4 +28,8 @@ frontend/*.sw?
 
 node_modules/
 .vscode
-backend/src/.*
+backend/src/.env
+frontend/.env
+.env
+.env.*
+!.env.example

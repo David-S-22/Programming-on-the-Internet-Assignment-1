@@ -69,8 +69,6 @@ function App() {
       query += `period=${Number(periodFilter.match(/\d+/))}`;
     }
 
-    console.log(import.meta.env.VITE_ROUTE);
-
     fetch(`${import.meta.env.VITE_ROUTE}/expenses${query}`)
     .then((data) => {
       data.json()
@@ -91,7 +89,7 @@ function App() {
     const confirmation = confirm(`Are you sure you want to remove the expense with the title "${expenseToDelete.title}" on the date "${new Date(expenseToDelete.date).toLocaleDateString()}"`)
 
     if (confirmation) {
-      fetch(`http://localhost:3000/expenses/${expenseToDelete.id}`, {
+      fetch(`${import.meta.env.VITE_ROUTE}/expenses/${expenseToDelete.id}`, {
         method: "DELETE",
       })
       .then((result) => {
@@ -113,7 +111,7 @@ function App() {
       return;
     }
 
-    fetch(`http://localhost:3000/expenses/add`, {
+    fetch(`${import.meta.env.VITE_ROUTE}/expenses/add`, {
       method: "POST",
       headers: {
         "Content-Type" : "application/json"
@@ -147,7 +145,7 @@ function App() {
       return;
     }
 
-    fetch(`http://localhost:3000/expenses/${expenseToEdit.id}`, {
+    fetch(`${import.meta.env.VITE_ROUTE}/expenses/${expenseToEdit.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type" : "application/json"
