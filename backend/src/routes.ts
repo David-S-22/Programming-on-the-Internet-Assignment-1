@@ -3,7 +3,7 @@ import type { expense } from "../../common/types.d.ts";
 import type { FastifyBaseLogger, FastifyInstance, RawReplyDefaultExpression, RawRequestDefaultExpression, RawServerDefault } from "fastify";
 import { expenseSchema, type AppTypeProvider } from "./schemas.ts";
 
-//This type is used to indicate that the passed in instance uses a custom JsonSchemaToTS type resolution provider, which allows for the JSON to type resolution and
+//This type is used to indicate that the passed in instance uses a custom JsonSchemaToTS type resolution provider, which allows for the typing and validation to work
 type FastifyInstanceWithTypeProvider = FastifyInstance<
   RawServerDefault,
   RawRequestDefaultExpression<RawServerDefault>,
@@ -75,7 +75,7 @@ export default async function registerRoutes(server : FastifyInstanceWithTypePro
         },
         required : ["id"],
       },
-      body: { $ref : "expenseSchema#" }
+      body: { $ref : "expenseSchema#" } //This is used to say that the body schema is expenseSchema defined in schemas.ts. The reason why I did this was to reduce unecessary duplication and make maintinability a bit easy since I only have to edit the schema in one location
     }
   },
   async (req, res) => {

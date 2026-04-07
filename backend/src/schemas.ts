@@ -18,7 +18,8 @@ const expenseSchema = {
 
 type AppTypeProvider = JsonSchemaToTsProvider<{
   ValidatorSchemaOptions: {
-    references: [typeof expenseSchema]
+    //This is pretty much used to ensure that the JSON Schema to Type is able to use the expense schema for typing, as otherwise it won't be able to do type resolution as types have no state
+    references: [typeof expenseSchema]  
   },
 }>;
 

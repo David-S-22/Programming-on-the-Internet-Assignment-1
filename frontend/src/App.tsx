@@ -79,10 +79,8 @@ function App() {
     .then((data) => {
       data.json()
       .then((expenses : expense[]) => {
-        let cost = 0;
-        expenses.forEach((expense) => cost += expense.cost * expense.amount);
         setExpenses(expenses);
-        setTotalCost(cost);
+        calculateAndSetTotalCost(expenses)
       }).catch((e) => setSystemErrorMessage(e));
     })
     .catch((e) => setSystemErrorMessage(e));

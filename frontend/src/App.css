@@ -339,12 +339,6 @@ button:focus-visible {
 		grid-template-columns: 1fr;
 	}
 
-	#new .expense-table-data input,
-	#new .expense-table-data select {
-		width: 100%;
-		max-width: 100%;
-	}
-
 	#new td:nth-child(7) > button {
 		width: 90%;
 		max-width: 160px;
