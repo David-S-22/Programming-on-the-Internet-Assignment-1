@@ -28,3 +28,4 @@ frontend/*.sw?
 
 node_modules/
 .vscode
+backend/src/.*

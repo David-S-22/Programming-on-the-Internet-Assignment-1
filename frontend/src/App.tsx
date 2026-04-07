@@ -69,7 +69,9 @@ function App() {
       query += `period=${Number(periodFilter.match(/\d+/))}`;
     }
 
-    fetch(`http://localhost:3000/expenses${query}`)
+    console.log(import.meta.env.VITE_ROUTE);
+
+    fetch(`${import.meta.env.VITE_ROUTE}/expenses${query}`)
     .then((data) => {
       data.json()
       .then((expenses : expense[]) => {
@@ -77,8 +79,9 @@ function App() {
         expenses.forEach((expense) => cost += expense.cost * expense.amount);
         setExpenses(expenses);
         setTotalCost(cost);
-      })
+      }).catch((e) => setSystemErrorMessage(e));
     })
+    .catch((e) => setSystemErrorMessage(e));
 
   }, [categoryFilter, periodFilter]);
 
