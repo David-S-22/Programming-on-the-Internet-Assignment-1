@@ -21,10 +21,10 @@ export default function ExpenseTable(props : ExpenseTableProps) {
     return expenseToCheck.title === ""
       || expenseToCheck.category === ""
       || expenseToCheck.category === props.expenseCategories[0]
-      || !Number.isFinite(expenseToCheck.cost)
+      || !Number.isFinite(expenseToCheck.cost) //Ensures that the number is within an (relatively) appropriate range e.g. not infinity
       || !Number.isInteger(expenseToCheck.amount) //validating to ensure that amount is a whole number
-      || expenseToCheck.amount < 1
-      || expenseToCheck.cost < 0
+      || expenseToCheck.amount < 1 //There needs to be at least 1 of something otherwise there's no point in recording it
+      || expenseToCheck.cost < 0 //As something can technically be free, I set it to 0 so it can be recorded
       || isNaN(expenseToCheck.date.getTime()) //The reason why we check if the gotten time is NaN is because there's no way to my knowledge and research to determine if a date is valid outside of a method like this
       || expenseToCheck.description === "";
   }
@@ -74,7 +74,7 @@ export default function ExpenseTable(props : ExpenseTableProps) {
         })
         .catch((e) => props.setSystemErrorMessage(e));
         
-        return;
+        return; //If not valid we exit early to prevent the table from being updated when the DB has not
       }
 
       //We're replacing the previous expesne with our new one and then setting the state again with our new collection, since states are immutable

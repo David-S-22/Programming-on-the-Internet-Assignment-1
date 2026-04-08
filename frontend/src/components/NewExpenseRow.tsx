@@ -20,7 +20,7 @@ export default function NewExpenseRow(props : NewExpenseRowProps) {
   const [newExpense, setNewExpense] = useState<expense>({ ...props.defaultExpense });
 
   function AddExpense() {
-    //Checking to ensure expense is valid before we try and add it
+    //Checking to ensure expense is valid before we even try and add it
     if (props.isExpenseInvalid(newExpense)) {
       props.setErrorMessage("The expense you tried to add is incorrect. Please ensure all fields are filled out properly before you try again.");
       return;
@@ -39,7 +39,7 @@ export default function NewExpenseRow(props : NewExpenseRowProps) {
         if (!response.ok) {
           props.setErrorMessage(data as string);
           setNewExpense({ ...props.defaultExpense });
-          return;
+          return; //If not valid we exit early to prevent the table from being updated when the DB has not
         }
         //Setting the id so that we can use it as the enumeration key and also so that we can delete or modify the newly created expense straight away.
         const newExpenseWithId: expense = { ...newExpense, id: data as number };
