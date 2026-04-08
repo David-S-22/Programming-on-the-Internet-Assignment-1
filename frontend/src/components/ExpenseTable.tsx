@@ -17,7 +17,7 @@ type ExpenseTableProps = {
 export default function ExpenseTable(props : ExpenseTableProps) {
   const [expenseToEdit, setExpenseToEdit] = useState<expense>({ ...props.defaultExpense });
 
-  function IsExpenseInvalid(expenseToCheck : expense) : boolean {
+  function isExpenseInvalid(expenseToCheck : expense) : boolean {
     return expenseToCheck.title === ""
       || expenseToCheck.category === ""
       || expenseToCheck.category === props.expenseCategories[0]
@@ -31,7 +31,7 @@ export default function ExpenseTable(props : ExpenseTableProps) {
 
   //The reason why this and the update function are both in the table component instead of the individual row function is because I feel that the row should not know about the exepense collection and should only be aware of the individual expense it should represent.
   //Because of this I decided to instead pass these down as props so that we can ensure a seperation of responsibility 
-  function DeleteExpense(expenseToDelete : expense) {
+  function deleteExpense(expenseToDelete : expense) {
     //Confirming the user's actions so they have a chance to go back before they perform this non-reversable action
     const confirmation = confirm(`Are you sure you want to remove the expense with the title "${expenseToDelete.title}" on the date "${new Date(expenseToDelete.date).toLocaleDateString()}"`)
 
@@ -51,9 +51,9 @@ export default function ExpenseTable(props : ExpenseTableProps) {
     }
   }
 
-  function UpdateExpense() {
+  function updateExpense() {
     //Ensuring that the expense is in a valid state before we try to update it
-    if (IsExpenseInvalid(expenseToEdit)) {
+    if (isExpenseInvalid(expenseToEdit)) {
       props.setErrorMessage(`The expense you tried to edit is currently invalid. Please ensure all fields are properly filled out before trying again.`);
       return;
     }
@@ -112,8 +112,8 @@ export default function ExpenseTable(props : ExpenseTableProps) {
               setExpenseToEdit={setExpenseToEdit}
               isBeingEdited={expense.id === expenseToEdit.id}
               expenseCategories={props.expenseCategories}
-              updateExpense={UpdateExpense}
-              deleteExpense={DeleteExpense}
+              updateExpense={updateExpense}
+              deleteExpense={deleteExpense}
             />
           ) 
         })}
@@ -126,7 +126,7 @@ export default function ExpenseTable(props : ExpenseTableProps) {
           setSystemErrorMessage={props.setSystemErrorMessage}
           filterExpensesUsingCriteria={props.filterExpensesUsingCriteria}
           calculateAndSetTotalCost={props.calculateAndSetTotalCost}
-          isExpenseInvalid={IsExpenseInvalid}
+          isExpenseInvalid={isExpenseInvalid}
         />
       </tbody>
     </table>

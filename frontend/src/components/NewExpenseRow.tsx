@@ -19,7 +19,7 @@ type NewExpenseRowProps = {
 export default function NewExpenseRow(props : NewExpenseRowProps) {
   const [newExpense, setNewExpense] = useState<expense>({ ...props.defaultExpense });
 
-  function AddExpense() {
+  function addExpense() {
     //Checking to ensure expense is valid before we even try and add it
     if (props.isExpenseInvalid(newExpense)) {
       props.setErrorMessage("The expense you tried to add is incorrect. Please ensure all fields are filled out properly before you try again.");
@@ -148,7 +148,7 @@ export default function NewExpenseRow(props : NewExpenseRowProps) {
         />
       </td>
       <td className="expense-table-data">
-        <button aria-label="Add new expense" onClick={AddExpense}>Add</button>
+        <button aria-label="Add new expense" onClick={addExpense}>Add</button>
       </td>
     </tr>
   )

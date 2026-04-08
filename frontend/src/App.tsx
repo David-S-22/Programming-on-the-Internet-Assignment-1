@@ -37,29 +37,34 @@ export default function App() {
   }
 
   //This method is being used to remove any expenses that do not meet the currently applied filters by removing all the expenses whose category aren't of the current category (if there is one) and have a expense time less than the specified period time (if there is one)
-  function FilterExpensesUsingCriteria(expensesToFilter : expense[]) : expense[] {
+  function filterExpensesUsingCriteria(expensesToFilter : expense[]) : expense[] {
     return expensesToFilter.filter((expense) => {
-      const categoryMatches = categoryFilter === categoryFilterValues[0] || expense.category === categoryFilter;
+      const categoryMatches = expense.category === categoryFilter;
+
+      //If there's no period filter then there's no point in checking if the expense falls within the period, if no period has been specified
+      if (periodFilter === periodFilterValues[0] && categoryFilter === categoryFilterValues[0]) {
+        return true;
+      }
 
       if (periodFilter === periodFilterValues[0]) {
         return categoryMatches;
       }
 
+      //Regex is to extract the number of months from the text
       const monthsToLookBack = Number(periodFilter.match(/\d+/)?.[0]);
-      if (!Number.isFinite(monthsToLookBack)) {
-        return categoryMatches;
-      }
-
       const cutoffTime = subMonths(new Date(), monthsToLookBack).getTime();
-      const expenseTime = new Date(expense.date).getTime();
-      const periodMatches = Number.isFinite(expenseTime) && expenseTime >= cutoffTime;
+      const periodMatches = new Date(expense.date).getTime() >= cutoffTime; //Checks if the expense date falls within the cut off time
+
+      if (categoryFilter === categoryFilterValues[0]) {
+        return periodMatches;
+      } 
 
       return categoryMatches && periodMatches;
     });
   }
 
   //A helper function to help me reduce the need to repeat this logic for updating and adding a expense
-  function CalculateAndSetTotalCost(expenses : expense[]) {
+  function calculateAndSetTotalCost(expenses : expense[]) {
     let newTotalCost = 0;
     expenses.forEach((expense) => newTotalCost += expense.cost * expense.amount);
     setTotalCost(newTotalCost);
@@ -77,6 +82,7 @@ export default function App() {
       query += `&period=${Number(periodFilter.match(/\d+/))}`;
     }
 
+      //Update the filter values in local storage so that they're up to date with the user's current filter selection
       localStorage.setItem(categoryFilterKey, categoryFilter);
       localStorage.setItem(periodFilterKey, periodFilter);
 
@@ -85,7 +91,7 @@ export default function App() {
       data.json()
       .then((expenses : expense[]) => {
         setExpenses(expenses);
-        CalculateAndSetTotalCost(expenses)
+        calculateAndSetTotalCost(expenses)
       }).catch((e) => setSystemErrorMessage(e));
     })
     .catch((e) => setSystemErrorMessage(e));
@@ -117,8 +123,8 @@ export default function App() {
         setExpenses={setExpenses}
         setErrorMessage={setErrorMessage}
         setSystemErrorMessage={setSystemErrorMessage}
-        filterExpensesUsingCriteria={FilterExpensesUsingCriteria}
-        calculateAndSetTotalCost={CalculateAndSetTotalCost}
+        filterExpensesUsingCriteria={filterExpensesUsingCriteria}
+        calculateAndSetTotalCost={calculateAndSetTotalCost}
       />
       <p id="total-cost-paragraph">{`Total Cost: $${totalCost}`}</p>
     </main>
