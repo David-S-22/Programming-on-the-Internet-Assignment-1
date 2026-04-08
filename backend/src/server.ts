@@ -17,6 +17,7 @@ fastify.register(fastifypg, {
   database: process.env.PGDATABASE
 });
 
+//This is used to register the routes to the server, as they're encapsulated into a sperate context
 fastify.register(registerRoutes);
 
 try {

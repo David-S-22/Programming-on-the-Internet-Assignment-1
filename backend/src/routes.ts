@@ -3,7 +3,7 @@ import type { expense } from "../../common/types.d.ts";
 import type { FastifyBaseLogger, FastifyInstance, RawReplyDefaultExpression, RawRequestDefaultExpression, RawServerDefault } from "fastify";
 import { expenseSchema, type AppTypeProvider } from "./schemas.ts";
 
-//This type is used to indicate that the passed in instance uses a custom JsonSchemaToTS type resolution provider, which allows for the typing and validation to work
+//This type is used to indicate that the passed in instance uses a custom JsonSchemaToTS type resolution provider, which allows for typing and validation to work
 type FastifyInstanceWithTypeProvider = FastifyInstance<
   RawServerDefault,
   RawRequestDefaultExpression<RawServerDefault>,
@@ -15,7 +15,7 @@ export default async function registerRoutes(server : FastifyInstanceWithTypePro
   server.addSchema(expenseSchema)
 
   server.get("/expenses", {
-    //This is the definition of what we're expecting from requests for this route, ensures backend validation and allows for type resolution
+    //This is the definition of what we're expecting from requests for this route, ensures backend validation and allowing for type resolution
     schema: {
       querystring: {
         type : "object",
@@ -36,7 +36,7 @@ export default async function registerRoutes(server : FastifyInstanceWithTypePro
     const earliestExpenseDate = period != null ? format(subMonths(new Date(), period), "yyyy-MM-dd") : '-infinity';
 
     const foundExpenses = (await server.pg.query<expense>(`SELECT * FROM expenses.expense 
-                                                           WHERE (category = $1 OR '' = $1) AND (date >= $2)
+                                                           WHERE (category = $1 OR '' = $1) AND (date >= $2) 
                                                            ORDER BY id`, [category, earliestExpenseDate])).rows;
 
     res.status(200);
