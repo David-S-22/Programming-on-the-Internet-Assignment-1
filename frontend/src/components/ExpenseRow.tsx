@@ -56,9 +56,8 @@ export default function ExpenseRow(props : ExpenseRowProps) {
         inputType="number"
         min={1}
         inputValue={props.expenseToEdit.amount}
-        displayValue={props.expense.amount}
+        displayValue={props.expense.amount.toLocaleString()}
         decimalScale={0}
-        step={1}
         onChange={(value) => {
           props.setExpenseToEdit((prev) => ({
             ...prev,
@@ -73,9 +72,8 @@ export default function ExpenseRow(props : ExpenseRowProps) {
         inputType="number"
         min={0}
         inputValue={props.expenseToEdit.cost}
-        displayValue={`$${props.expense.cost}`}
+        displayValue={`$${props.expense.cost.toLocaleString()}`}
         decimalScale={2}
-        step={.01 /* This is to ensure that users can increment by 0.01 without having to type it in */}
         onChange={(value) => {
           props.setExpenseToEdit((prev) => ({
             ...prev,

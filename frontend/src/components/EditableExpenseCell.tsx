@@ -9,7 +9,6 @@ type EditableExpenseCellProps = {
   inputType: 'text' | 'number' | 'select' | 'date',
   inputValue: string | number | Date,
   min?: number,
-  step? : number,
   decimalScale? : number,
   options?: string[],
   onChange: (value: string | number | Date) => void,
@@ -56,10 +55,10 @@ function EditableExpenseCell(props: EditableExpenseCellProps) {
       <NumericFormat
         aria-label={props.ariaLabel}
         min={props.min}
-        value={(props.inputValue as number).toString()}
-        step={props.step}
+        value={(props.inputValue as number)}
         decimalScale={props.decimalScale}
         title={props.title}
+        thousandSeparator=","
         onValueChange={({ floatValue }) => {
           props.onChange(floatValue ?? NaN);
         }}
