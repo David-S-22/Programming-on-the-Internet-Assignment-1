@@ -39,22 +39,24 @@ export default function App() {
   //This method is being used to remove any expenses that do not meet the currently applied filters by removing all the expenses whose category aren't of the current category (if there is one) and have a expense time less than the specified period time (if there is one)
   function filterExpensesUsingCriteria(expensesToFilter : expense[]) : expense[] {
     return expensesToFilter.filter((expense) => {
-      const categoryMatches = expense.category === categoryFilter;
-
-      //If there's no period filter then there's no point in checking if the expense falls within the period, if no period has been specified
+      //If there's no filters then there's no point in checking them
       if (periodFilter === periodFilterValues[0] && categoryFilter === categoryFilterValues[0]) {
         return true;
       }
 
+      const categoryMatches = expense.category === categoryFilter;
+
+      //If no period filter has been specified there's no point in checking if the expense falls in the specified period.
       if (periodFilter === periodFilterValues[0]) {
         return categoryMatches;
       }
 
-      //Regex is to extract the number of months from the text
+      //Regex is to extract the number of months from the text, as I couldn't find a better way to do this.
       const monthsToLookBack = Number(periodFilter.match(/\d+/)?.[0]);
       const cutoffTime = subMonths(new Date(), monthsToLookBack).getTime();
       const periodMatches = new Date(expense.date).getTime() >= cutoffTime; //Checks if the expense date falls within the cut off time
 
+      //Same as above, if there's no category filter then . Also the reason why we did this check second is because checking the period filter requires more computing compared to a string comparison, so this is a very simple optimisation.
       if (categoryFilter === categoryFilterValues[0]) {
         return periodMatches;
       } 
@@ -73,20 +75,21 @@ export default function App() {
   //This effect is used to get the filtered expenses based on the selected filters and then populate the expense array with the filtered expenses every time the filters are changed.
   //Also this is used to populate the tables initally as it will run after the inital render, allowing us to initally populate the table.
   useEffect(() => {
-    let query = "?";
+    const params = new URLSearchParams();
     if (categoryFilter !== categoryFilterValues[0]) {
-      query += `category=${categoryFilter}`;
+      params.append("category", categoryFilter)
     }
     if (periodFilter !== periodFilterValues[0]) {
-      //The bellow regex is used to extract the number sub-string from the string and then transforming it into a number
-      query += `&period=${Number(periodFilter.match(/\d+/))}`;
+      //The below regex is used to extract the number sub-string from the string and then transforming it into a number
+      //Also since there's only two
+      params.append("period", Number(periodFilter.match(/\d+/)).toString())
     }
 
       //Update the filter values in local storage so that they're up to date with the user's current filter selection
       localStorage.setItem(categoryFilterKey, categoryFilter);
       localStorage.setItem(periodFilterKey, periodFilter);
 
-    fetch(`${import.meta.env.VITE_ROUTE}/expenses${query}`)
+    fetch(`${import.meta.env.VITE_ROUTE}/expenses?${params}`)
     .then((data) => {
       data.json()
       .then((expenses : expense[]) => {
