@@ -39,6 +39,7 @@ export default function NewExpenseRow(props : NewExpenseRowProps) {
         if (!response.ok) {
           props.setErrorMessage(data as string);
           setNewExpense({ ...props.defaultExpense });
+          return;
         }
         //Setting the id so that we can use it as the enumeration key and also so that we can delete or modify the newly created expense straight away.
         const newExpenseWithId: expense = { ...newExpense, id: data as number };

@@ -7,7 +7,7 @@ type EditableExpenseCellProps = {
   ariaLabel: string,
   title?: string,
   inputType: 'text' | 'number' | 'select' | 'date',
-  value: string | number | Date,
+  inputValue: string | number | Date,
   min?: number,
   step? : number,
   decimalScale? : number,
@@ -24,7 +24,7 @@ function EditableExpenseCell(props: EditableExpenseCellProps) {
       <input
         aria-label={props.ariaLabel}
         title={props.title}
-        value={props.value as string}
+        value={props.inputValue as string}
         onChange={(e) => {
           props.onChange(e.target.value);
         }}
@@ -37,7 +37,7 @@ function EditableExpenseCell(props: EditableExpenseCellProps) {
       <select
         aria-label={props.ariaLabel}
         title={props.title}
-        value={props.value as string}
+        value={props.inputValue as string}
         onChange={(e) => {
           props.onChange(e.target.value);
         }}
@@ -56,7 +56,7 @@ function EditableExpenseCell(props: EditableExpenseCellProps) {
       <NumericFormat
         aria-label={props.ariaLabel}
         min={props.min}
-        value={(props.value as number).toString()}
+        value={(props.inputValue as number).toString()}
         step={props.step}
         decimalScale={props.decimalScale}
         title={props.title}
@@ -72,7 +72,7 @@ function EditableExpenseCell(props: EditableExpenseCellProps) {
       <DateInput
         ariaLabel={props.ariaLabel}
         title={props.title}
-        value={props.value as Date}
+        value={props.inputValue as Date}
         onChange={(date) => {
           props.onChange(date);
         }}
