@@ -26,8 +26,8 @@ export default function App() {
   const [expenses, setExpenses] = useState<expense[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [totalCost, setTotalCost] = useState<number>(0);
-  const [categoryFilter, setCategoryFilter] = useState<string>(categoryFilterValues[0]);
-  const [periodFilter, setPeriodFilter] = useState<string>(periodFilterValues[0]);
+  const [categoryFilter, setCategoryFilter] = useState<string>(() => localStorage.getItem(categoryFilterKey) ?? categoryFilterValues[0]);
+  const [periodFilter, setPeriodFilter] = useState<string>(() => localStorage.getItem(periodFilterKey) ?? periodFilterValues[0]);
 
   //This method is used to create the error messages for when the system has come into a problem. As the message for this kind of error should be the same I extracted it out into this helper method to reduce repetition 
   function setSystemErrorMessage(error : Error | string) {
@@ -64,11 +64,6 @@ export default function App() {
     expenses.forEach((expense) => newTotalCost += expense.cost * expense.amount);
     setTotalCost(newTotalCost);
   }
-
-  useEffect(() => {
-    setPeriodFilter(localStorage.getItem(periodFilterKey) ?? periodFilterValues[0])
-    setCategoryFilter(localStorage.getItem(categoryFilterKey) ?? categoryFilterValues[0]);
-  }, []);
 
   //This effect is used to get the filtered expenses based on the selected filters and then populate the expense array with the filtered expenses every time the filters are changed.
   //Also this is used to populate the tables initally as it will run after the inital render, allowing us to initally populate the table.
