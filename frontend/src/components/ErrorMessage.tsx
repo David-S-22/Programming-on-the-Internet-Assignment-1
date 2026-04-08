@@ -14,7 +14,7 @@ export default function ErrorMessage(props : ErrorMessageProps) {
         ? <div className="error-message-banner" role="alert" aria-live="assertive">
             <p id="errorMessage">{props.errorMessage}</p>
             <button aria-label="Dismiss error message" onClick={() => (props.setErrorMessage(""))}><XIcon size={16}/></button>
-        </div>
+          </div>
         : <></> 
       }
     </>
