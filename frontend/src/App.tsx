@@ -6,23 +6,23 @@ import { subMonths } from 'date-fns'
 import ExpenseFilters from './components/ExpenseFilters.tsx'
 import ErrorMessage from './components/ErrorMessage.tsx'
 
-  const categoryFilterValues = ["No Category", "Travel", "Groceries", "Personal", "Utilities", "Transport"];
-  const categoryFilterKey = "category-filter"
+const categoryFilterValues = ["No Category", "Travel", "Groceries", "Personal", "Utilities", "Transport"];
+const categoryFilterKey = "category-filter"
 
-  const periodFilterValues = ["No Period", "3 Months", "6 Months", "9 Months", "12 Months"];
-  const periodFilterKey = "period-filter"
+const periodFilterValues = ["No Period", "3 Months", "6 Months", "9 Months", "12 Months"];
+const periodFilterKey = "period-filter"
+
+const defaultExpense: expense = {
+  id: NaN,
+  title: "",
+  category: categoryFilterValues[0],
+  amount: NaN,
+  cost: NaN,
+  date: new Date(),
+  description: "",
+};
 
 export default function App() {
-  const defaultExpense: expense = {
-    id: NaN,
-    title: "",
-    category: categoryFilterValues[0],
-    amount: NaN,
-    cost: NaN,
-    date: new Date(),
-    description: "",
-  };
-
   const [expenses, setExpenses] = useState<expense[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [totalCost, setTotalCost] = useState<number>(0);
