@@ -3,11 +3,11 @@ import { NumericFormat } from 'react-number-format'
 
 type EditableExpenseCellProps = {
   isEditing: boolean,
-  displayValue: string | number,
   ariaLabel: string,
   title?: string,
   inputType: 'text' | 'number' | 'select' | 'date',
-  inputValue: string | number | Date,
+  displayValue: string | number, //This value is used to populate the display value, as the input and display value can differ between format/text, so they're kept seperate for simplicity.
+  inputValue: string | number | Date, //This value is used to populate the input value, as the input and display value can differ between format/text, so they're kept seperate for simplicity.
   min?: number,
   decimalScale? : number,
   options?: string[],
@@ -18,6 +18,8 @@ type EditableExpenseCellProps = {
 function EditableExpenseCell(props: EditableExpenseCellProps) {
   let editingElement;
 
+  //The below conditionals are used to set the display value, as they each require a slightly different way to handle them.
+  //However, putting them each into their own component will lead to a lot of repeated code and could potentially make things slightly more confusing so I decided to keep it like this.
   if (props.inputType === 'text') {
     editingElement = (
       <input
