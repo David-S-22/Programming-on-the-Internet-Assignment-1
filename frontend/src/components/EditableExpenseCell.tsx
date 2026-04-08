@@ -1,4 +1,5 @@
 import DateInput from './DateInput'
+import { NumericFormat } from 'react-number-format'
 
 type EditableExpenseCellProps = {
   isEditing: boolean,
@@ -9,6 +10,7 @@ type EditableExpenseCellProps = {
   value: string | number | Date,
   min?: number,
   step? : number,
+  decimalScale? : number,
   options?: string[],
   onChange: (value: string | number | Date) => void,
 }
@@ -51,15 +53,15 @@ function EditableExpenseCell(props: EditableExpenseCellProps) {
 
   if (props.inputType === 'number') {
     editingElement = (
-      <input
+      <NumericFormat
         aria-label={props.ariaLabel}
-        type="number"
         min={props.min}
         value={(props.value as number).toString()}
         step={props.step}
+        decimalScale={props.decimalScale}
         title={props.title}
-        onChange={(e) => {
-          props.onChange(e.target.valueAsNumber);
+        onValueChange={({ floatValue }) => {
+          props.onChange(floatValue ?? NaN);
         }}
       />
     );

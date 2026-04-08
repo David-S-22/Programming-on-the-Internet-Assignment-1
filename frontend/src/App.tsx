@@ -1,31 +1,25 @@
 import { useEffect, useState } from 'react'
 import './App.css'
-import DateInput from './components/DateInput'
-import EditableExpenseCell from './components/EditableExpenseCell'
 import type { expense } from "../../common/types.d.ts"
-import { subMonths } from 'date-fns'
 import { XIcon } from 'lucide-react'
-
-const expenseCategories = ["No Category", "Travel", "Groceries", "Personal", "Utilities", "Transport"];
-const periodFilters = ["No Period", "3 Months", "6 Months", "9 Months", "12 Months"];
-
-//This object is being used to allow us to set a default expense (an expense object with all of it's properties set to empty) everytime we need to clear a state of type expense
-const defaultExpense: expense = {
-  id: NaN,
-  title: "",
-  category: expenseCategories[0],
-  amount: NaN,
-  cost: NaN,
-  date: new Date(),
-  description: "",
-};
+import ExpenseTable from './components/ExpenseTable.tsx'
+import { subMonths } from 'date-fns'
 
 function App() {
+  const expenseCategories = ["No Category", "Travel", "Groceries", "Personal", "Utilities", "Transport"];
+  const periodFilters = ["No Period", "3 Months", "6 Months", "9 Months", "12 Months"];
+  const defaultExpense: expense = {
+    id: NaN,
+    title: "",
+    category: expenseCategories[0],
+    amount: NaN,
+    cost: NaN,
+    date: new Date(),
+    description: "",
+  };
+
   const [expenses, setExpenses] = useState<expense[]>([]);
-  const [expenseToEdit, setExpenseToEdit] = useState<expense>({ ...defaultExpense });
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const [newExpense, setNewExpense] = useState<expense>({ ...defaultExpense });
-  const [newExpenseNumberInputsKey, setNewExpenseNumberInputsKey] = useState<number>(0);
   const [totalCost, setTotalCost] = useState<number>(0);
   const [categoryFilter, setCategoryFilter] = useState<string>(expenseCategories[0]);
   const [periodFilter, setPeriodFilter] = useState<string>(periodFilters[0]);
@@ -37,27 +31,15 @@ function App() {
     setErrorMessage(message);
   }
 
-  function isExpenseInvalid(expenseToCheck : expense) : boolean {
-    return expenseToCheck.title === "" 
-      || expenseToCheck.category === "" 
-      || expenseToCheck.category === expenseCategories[0]
-      || !Number.isFinite(expenseToCheck.cost)
-      || !Number.isInteger(expenseToCheck.amount) //validating to ensure that amount is a whole number
-      || expenseToCheck.amount < 1
-      || expenseToCheck.cost < 0
-      || isNaN(expenseToCheck.date.getTime()) //The reason why we check if the gotten time is NaN is because there's no way to my knowledge and research to determine if a date is valid outside of a method like this
-      || expenseToCheck.description === "";
-  }
-
   //This method is being used to remove any expenses that do not meet the currently applied filters by removing all the expenses whose category aren't of the current category (if there is one) and have a expense time less than the specified period time (if there is one)
-  function filterExpensesUsingCriteria(expensesToFilter : expense[]) : expense[] {
+  function FilterExpensesUsingCriteria(expensesToFilter : expense[]) : expense[] {
     const filteredExpenses = expensesToFilter.filter((expense) => ((categoryFilter === expenseCategories[0] || expense.category === categoryFilter) 
                               && (periodFilter === periodFilters[0] || (subMonths(new Date(), Number(periodFilter.match(/\d+/)))).getTime() <= new Date(expense.date).getTime())));
     return filteredExpenses;
   }
 
   //A helper function to help me reduce the need to repeat this logic for updating and adding a expense
-  function calculateAndSetTotalCost(expenses : expense[]) {
+  function CalculateAndSetTotalCost(expenses : expense[]) {
     let newTotalCost = 0;
     expenses.forEach((expense) => newTotalCost += expense.cost * expense.amount);
     setTotalCost(newTotalCost);
@@ -80,107 +62,17 @@ function App() {
       data.json()
       .then((expenses : expense[]) => {
         setExpenses(expenses);
-        calculateAndSetTotalCost(expenses)
+        CalculateAndSetTotalCost(expenses)
       }).catch((e) => setSystemErrorMessage(e));
     })
     .catch((e) => setSystemErrorMessage(e));
 
   }, [categoryFilter, periodFilter]);
 
-
-  function DeleteExpense(expenseToDelete : expense) {
-    //Confirming the user's actions so they have a chance to go back before they perform this non-reversable action
-    const confirmation = confirm(`Are you sure you want to remove the expense with the title "${expenseToDelete.title}" on the date "${new Date(expenseToDelete.date).toLocaleDateString()}"`)
-
-    if (confirmation) {
-      fetch(`${import.meta.env.VITE_ROUTE}/expenses/${expenseToDelete.id}`, {
-        method: "DELETE",
-      })
-      .then((result) => {
-        if (result.ok) {
-          //Creating a new expense array without the deleted expense so we can then re-set the expense array as react state variables are immutable.
-          const newExpenses = expenses.filter((expense) => expense.id !== expenseToDelete.id);
-          const newTotalCost = totalCost - expenseToDelete.cost * expenseToDelete.amount;
-          setExpenses(newExpenses);
-          setTotalCost(newTotalCost);
-        }
-      })
-      .catch((e) => setSystemErrorMessage(e));
-    }
-  }
-
-  function addExpense() {
-    //Checking to ensure expense is valid before we try and add it
-    if (isExpenseInvalid(newExpense)) {
-      setErrorMessage("The expense you tried to add is incorrect. Please ensure all fields are filled out properly before you try again.");
-      return;
-    }
-
-    fetch(`${import.meta.env.VITE_ROUTE}/expenses/add`, {
-      method: "POST",
-      headers: {
-        "Content-Type" : "application/json"
-      },
-        body: JSON.stringify(newExpense)
-    })
-    .then((response) => {
-      response.json()
-      .then((data : number | string) => {
-        if (!response.ok) {
-          setErrorMessage(data as string);
-          setNewExpense({ ...defaultExpense });
-        }
-        //Setting the id so that we can use it as the enumeration key and also so that we can delete or modify the newly created expense straight away.
-        const newExpenseWithId: expense = { ...newExpense, id: data as number };
-        const newExpenses = filterExpensesUsingCriteria([...expenses, newExpenseWithId]); 
-        setExpenses(newExpenses);
-        setNewExpense({ ...defaultExpense });
-        setNewExpenseNumberInputsKey((previousKey) => previousKey + 1);
-        calculateAndSetTotalCost(newExpenses);
-      })
-      .catch((e) => setSystemErrorMessage(e))
-    })
-    .catch((e) => setSystemErrorMessage(e));
-  }
-
-  function updateExpense() {
-    //Ensuring that the expense is in a valid state before we try to update it
-    if (isExpenseInvalid(expenseToEdit)) {
-      setErrorMessage(`The expense you tried to edit is currently invalid. Please ensure all fields are properly filled out before trying again.`);
-      return;
-    }
-
-    fetch(`${import.meta.env.VITE_ROUTE}/expenses/${expenseToEdit.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type" : "application/json"
-        },
-        body: JSON.stringify(expenseToEdit)
-      })
-      .then((response) => {
-        if (!response.ok) {
-          response.json()
-          .then((data : string) => {
-            setSystemErrorMessage(`${response.status} ${data}`);
-            setExpenseToEdit({ ...defaultExpense });
-          })
-          .catch((e) => setSystemErrorMessage(e));
-        }
-
-        let updatedExpenses = expenses.map((expense) => expense.id === expenseToEdit.id ? expenseToEdit : expense);
-        updatedExpenses = filterExpensesUsingCriteria(updatedExpenses);
-        
-        setExpenses(updatedExpenses);
-        setExpenseToEdit({ ...defaultExpense });
-        calculateAndSetTotalCost(updatedExpenses);
-      })
-      .catch((e) => setSystemErrorMessage(e));
-  }
-
   return (
     <main className="expense-tracker-page" id="expense-logbook" tabIndex={-1} aria-labelledby="page-title">
       <h1 id="page-title">Welcome to your Expense Tracker</h1>
-      { //If an error message has been set we display it otherwise at the top to let the user know that an error has occured
+      { //If an error message has been set we display it otherwise at the top to let the user know that an error has occured so that they're desired action could not be done
         errorMessage !== "" 
         ? <div className="error-message-banner" role="alert" aria-live="assertive">
             <p id="errorMessage">{errorMessage}</p>
@@ -214,232 +106,16 @@ function App() {
           })}
         </select>
       </div>
-      <table id="expenses-table">
-        <thead id="expenses-table-header">
-          <tr>
-            <th scope="col" className="expense-table-header">Title</th>
-            <th scope="col" className="expense-table-header">Category</th>
-            <th scope="col" className="expense-table-header">Amount</th>
-            <th scope="col" className="expense-table-header">Cost</th>
-            <th scope="col" className="expense-table-header">Date</th>
-            <th scope="col" className="expense-table-header">Description</th>
-            <th scope="col" className="expense-table-header">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          { /* This block of code is adding each expense row into the table so that we can display them all */ }
-          { expenses.map((expense) => {
-            const isEditing = expense.id === expenseToEdit.id;
-            const expenseDate = new Date(expense.date).toLocaleDateString();
-            const rowContext = `${expense.title} on ${expenseDate}`;
-
-            return (
-              <tr key={expense.id}>
-                <EditableExpenseCell
-                  isEditing={isEditing}
-                  ariaLabel={`Edit title for ${rowContext}`}
-                  title="Enter a clear expense title."
-                  inputType="text"
-                  value={expenseToEdit.title}
-                  displayValue={expense.title}
-                  onChange={(value) => {
-                    setExpenseToEdit((prev) => ({
-                      ...prev,
-                      title: value as string,
-                    }));
-                  }}
-                />
-                <EditableExpenseCell
-                  isEditing={isEditing}
-                  ariaLabel={`Edit category for ${rowContext}`}
-                  title="Choose the most accurate category."
-                  inputType="select"
-                  value={expenseToEdit.category}
-                  displayValue={expense.category}
-                  options={expenseCategories}
-                  onChange={(value) => {
-                    setExpenseToEdit((prev) => ({
-                      ...prev,
-                      category: value as string,
-                    }));
-                  }}
-                />
-                <EditableExpenseCell
-                  isEditing={isEditing}
-                  ariaLabel={`Edit amount for ${rowContext}`}
-                  title="Enter a whole number greater than or equal to 1."
-                  inputType="number"
-                  min={1}
-                  value={expenseToEdit.amount}
-                  displayValue={expense.amount}
-                  step={1}
-                  onChange={(value) => {
-                    setExpenseToEdit((prev) => ({
-                      ...prev,
-                      amount: value as number,
-                    }));
-                  }}
-                />
-                <EditableExpenseCell
-                  isEditing={isEditing}
-                  ariaLabel={`Edit cost for ${rowContext}`}
-                  title="Use up to 2 decimal places, for example 12.03."
-                  inputType="number"
-                  min={0}
-                  value={expenseToEdit.cost}
-                  displayValue={`$${expense.cost}`}
-                  step={.01 /* This is to ensure that users can increment by 0.1 without having to type*/}
-                  onChange={(value) => {
-                    setExpenseToEdit((prev) => ({
-                      ...prev,
-                      cost: value as number,
-                    }));
-                  }}
-                />
-                <EditableExpenseCell
-                  isEditing={isEditing}
-                  ariaLabel={`Edit date for ${rowContext}`}
-                  title="Select the date for this expense."
-                  inputType="date"
-                  value={expenseToEdit.date}
-                  displayValue={expenseDate}
-                  onChange={(value) => {
-                    setExpenseToEdit((prev) => ({
-                      ...prev,
-                      date: value as Date,
-                    }));
-                  }}
-                />
-                <EditableExpenseCell
-                  isEditing={isEditing}
-                  ariaLabel={`Edit description for ${rowContext}`}
-                  title="Add a short description about this expense."
-                  inputType="text"
-                  value={expenseToEdit.description}
-                  displayValue={expense.description}
-                  onChange={(value) => {
-                    setExpenseToEdit((prev) => ({
-                      ...prev,
-                      description: value as string,
-                    }));
-                  }}
-                />
-                <td className="expense-table-data">
-                  {
-                    isEditing
-                      ? 
-                      <span>
-                        <button aria-label={`Confirm edits for ${rowContext}`} onClick={() => updateExpense()}>Confirm</button>
-                        <button aria-label={`Cancel edits for ${rowContext}`} onClick={() => setExpenseToEdit({ ...defaultExpense })}>Cancel</button>
-                      </span>
-                      : 
-                      <span>
-                        <button aria-label={`Edit expense ${rowContext}`} onClick={() => setExpenseToEdit({ ...expense, date: new Date(expense.date) })}>Edit</button>
-                        <button aria-label={`Delete expense ${rowContext}`} onClick={() => DeleteExpense(expense)}>Delete</button>
-                      </span>
-                  }
-                </td>
-              </tr>
-            )
-          }) }
-          { /* This table row is to add the row that allows users to create a new expense */ }
-          <tr id="new">
-            <td className="expense-table-data">
-              <input
-                aria-label="New expense title"
-                value={newExpense.title}
-                onChange={(e) => {
-                  setNewExpense((prev) => ({
-                    ...prev,
-                    title: e.target.value,
-                  }));
-                }}
-              />
-            </td>
-            <td className="expense-table-data">
-              <select
-                aria-label="New expense category"
-                value={newExpense.category}
-                onChange={(e) => {
-                  setNewExpense((prev) => ({
-                    ...prev,
-                    category: e.target.value,
-                  }));
-                }}
-              >
-                { expenseCategories.map((category) => {
-                  return (
-                    <option key={category}>{category}</option>
-                  )
-                }) }
-              </select>
-            </td>
-            <td className="expense-table-data">
-              <input
-                key={`new-expense-amount-${newExpenseNumberInputsKey}`}
-                type="number"
-                min="1"
-                aria-label="New expense amount"
-                defaultValue=""
-                inputMode="numeric"
-                placeholder="e.g. 2"
-                title="Enter a whole number greater than or equal to 1."
-                onChange={(e) => {
-                  setNewExpense((prev) => ({
-                    ...prev,
-                    amount: e.target.valueAsNumber,
-                  }));
-                }}
-              />
-            </td>
-            <td className="expense-table-data">
-              <input
-                key={`new-expense-cost-${newExpenseNumberInputsKey}`}
-                type="number"
-                min="0"
-                aria-label="New expense cost"
-                step={.01}
-                defaultValue=""
-                placeholder="e.g. 12.03"
-                title="Use up to 2 decimal places, for example 12.03."
-                onChange={(e) => {
-                  setNewExpense((prev) => ({
-                    ...prev,
-                    cost: e.target.valueAsNumber,
-                  }));
-                }}
-              />
-            </td>
-            <td className="expense-table-data">
-              <DateInput
-                ariaLabel="New expense date"
-                value={newExpense.date}
-                onChange={(date) => {
-                  setNewExpense((prev) => ({
-                    ...prev,
-                    date,
-                  }));
-                }}
-              />
-            </td>
-            <td className="expense-table-data">
-              <input
-                aria-label="New expense description"
-                value={newExpense.description}
-                onChange={(e) => {
-                  setNewExpense((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }));
-                }}
-              />
-            </td>
-            <td className="expense-table-data">
-             <button aria-label="Add new expense" onClick={addExpense}>Add</button>
-            </td>
-        </tr>
-        </tbody>
-      </table>
+      <ExpenseTable
+        expenses={expenses}
+        defaultExpense={defaultExpense}
+        expenseCategories={expenseCategories}
+        setExpenses={setExpenses}
+        setErrorMessage={setErrorMessage}
+        setSystemErrorMessage={setSystemErrorMessage}
+        filterExpensesUsingCriteria={FilterExpensesUsingCriteria}
+        calculateAndSetTotalCost={CalculateAndSetTotalCost}
+      />
       <p id="total-cost-paragraph">{`Total Cost: $${totalCost}`}</p>
     </main>
   )
