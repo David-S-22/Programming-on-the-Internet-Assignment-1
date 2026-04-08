@@ -19,6 +19,7 @@ Life can have many expenses, and it can be increadbly hard to track all of them 
 
 # Features
 - Dynamic Filtering
+- Applied filters (if there are any) are applied on load
 - Responsive Page Design
 - Easy to navigate and use 
 
