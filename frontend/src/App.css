@@ -1,5 +1,5 @@
 :root {
-	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	font-family: 'Segoe UI';
 	line-height: 1.4;
 	font-weight: 400;
 	color: #151a26;
@@ -8,10 +8,6 @@
 	--table-font-size: 1rem;
 	--action-button-height: 33px;
 	--add-button-min-width: 92px;
-	font-synthesis: none;
-	text-rendering: optimizeLegibility;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
 }
 
 * {
@@ -31,7 +27,6 @@ body {
 
 h1 {
 	margin: 0 0 18px;
-	font-size: clamp(1.8rem, 2.3vw, 2.3rem);
 	text-align: center;
 }
 
