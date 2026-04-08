@@ -84,8 +84,7 @@ export default async function registerRoutes(server : FastifyInstanceWithTypePro
     const result = (await server.pg.query(`UPDATE expenses.expense 
                                            SET title=$1, category=$2, amount=$3, cost=$4, date=$5, description=$6 
                                            WHERE id = $7;`, 
-                                             [title, category, amount, cost, date, description, id]))
-                                           .rowCount;
+                                             [title, category, amount, cost, date, description, id])).rowCount;
 
     if (result === 0) {
       res.status(404);
@@ -103,10 +102,10 @@ export default async function registerRoutes(server : FastifyInstanceWithTypePro
   async (req, res) => {
     const { title, category, amount, cost, date, description } = req.body;
     const result = (await server.pg.query<expense>(`INSERT INTO expenses.expense(
-                            title, category, amount, cost, date, description)
-                            VALUES ($1, $2, $3, $4, $5, $6)
-                            RETURNING id;`,
-                              [title, category, amount, cost, date, description])).rows[0];
+                                                    title, category, amount, cost, date, description)
+                                                    VALUES ($1, $2, $3, $4, $5, $6)
+                                                    RETURNING id;`,
+                                                    [title, category, amount, cost, date, description])).rows[0];
 
     res.status(200);
     res.send(JSON.stringify(result?.id));
